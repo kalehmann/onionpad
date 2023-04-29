@@ -1,0 +1,17 @@
+---
+name: "PyLint code analysis"
+author: "Karsten Lehmann <mail@kalehmann.de>"
+description: "Run black over the code"
+inputs:
+        path:
+                description: "The directories or files containing the code"
+                required: true
+runs:
+        using: "docker"
+        image: "../../../Dockerfile"
+        entrypoint: "/bin/bash"
+        args:
+                - "-c"
+                - >-
+                        black --check ${{ inputs.path }}
+...
