@@ -18,6 +18,11 @@
 
 """Provides easy access to the path of the icons of the project."""
 
+try:
+    from typing import Union
+except ImportError as _:
+    pass
+
 import os
 
 from .util import dirname
@@ -30,7 +35,8 @@ class _FileFinder:  # pylint: disable=too-few-public-methods
                      folder.
     :param postfix: This is appended after the attribute name. Usually a file
                     extension.
-    :param subfinders: Other _FileFinders that can be accessed as attributes.
+    :param subfinders: Other :class:`_FileFinder` instances that can be accessed
+                       as attributes.
                        The keys are the names of the attributes.
 
     Examples::
@@ -54,7 +60,7 @@ class _FileFinder:  # pylint: disable=too-few-public-methods
             subfinders = {}
         self._subfinders = subfinders
 
-    def __getattr__(self, name: str) -> str | "_FileFinder":
+    def __getattr__(self, name: str) -> Union[str, "_FileFinder"]:
         if name in self._subfinders:
             return self._subfinders[name]
         path = self._basepath + name + self._postfix
@@ -79,3 +85,10 @@ Icons = _FileFinder(
         ),
     },
 )
+"""Get the paths to the icons in `onionpad/icons` as attributes.
+
+Examples::
+
+    from onionpad.assets import Icons
+    print(Icons.generic.layers)  # onionpad/icons/generic/layers-14.bmp
+"""

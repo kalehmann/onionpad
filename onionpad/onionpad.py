@@ -47,7 +47,7 @@ class Mode:
     @property
     def group(self) -> Group | None:
         """
-        :returns: A `displayio.Group` that will be shown on the display.
+        :returns: A :class:`displayio.Group` that will be shown on the display.
         """
         return None
 
@@ -57,7 +57,7 @@ class Mode:
         :returns: A 2-dimensional 4x3 list with handlers that will be executed
                   when a key on the OnionPad is pressed.
 
-                  See `OnionPad._exec_event_handler` for possible handlers.
+                  See :meth:`OnionPad._exec_event_handler` for possible handlers.
         """
         return [[None, None, None, None] for _ in range(3)]
 

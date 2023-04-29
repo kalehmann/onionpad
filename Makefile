@@ -43,5 +43,15 @@ fetch-libraries: $(FIRMWARE_DIRECTORY)/boot_out.txt
 
 clean:
 	rm -rf $(FIRMWARE_DIRECTORY)
+	$(MAKE) -C docs clean
 
-.PHONY: clean fetch-libraries
+html:
+	$(MAKE) -C docs html
+
+dirhtml:
+	$(MAKE) -C docs dirhtml
+
+singlehtml:
+	$(MAKE) -C docs singlehtml
+
+.PHONY: clean fetch-libraries html dirhtml singlehtml

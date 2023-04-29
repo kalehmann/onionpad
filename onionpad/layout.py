@@ -63,6 +63,7 @@ class HotkeyMap(Group):
         :param images: A 2-dimensional 4x3 iterable with the images for the
                        hotkeys. Each image can either be a
                        `displayio.OnDiskBitmap` or `None`.
+        :type images: typing.Iterable[typing.Iterable[~displayio.OnDiskBitmap]]
         :returns: Whether atleast one icon has changed.
         """
         changed = False
@@ -84,6 +85,7 @@ class HotkeyMap(Group):
         :param left: The horizontal offset of the icon from the top left corner.
         :param top: The vertical offset of the icon from the top left corner.
         :param icon: The new icon or `None` to clear the current icon.
+        :type icon: ~displayio.OnDiskBitmap
         :returns: Whether the new icon differs from the current icon.
         """
         if self._images[top][left] == icon:
