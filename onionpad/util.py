@@ -21,6 +21,7 @@
 from collections import OrderedDict
 import os
 
+
 class LayeredMap:
     """A 2-dimensional structure with multiple layers.
 
@@ -43,7 +44,7 @@ class LayeredMap:
         print(l[1][1]) # 2
     """
 
-    def __init__(self, width : int, height : int):
+    def __init__(self, width: int, height: int):
         self._height = height
         self._width = width
         self._layers = OrderedDict()
@@ -67,12 +68,9 @@ class LayeredMap:
         """
         :returns: A tuple of the contents.
         """
-        return tuple(
-            tuple(element for element in row)
-            for row in self
-        )
+        return tuple(tuple(element for element in row) for row in self)
 
-    def push_layer(self, layer : list, name : str) -> None:
+    def push_layer(self, layer: list, name: str) -> None:
         """Adds a new layer on top of the map.
 
         :param layer: A 2-dimensional list with equal dimensions to the
@@ -81,8 +79,7 @@ class LayeredMap:
         """
         if len(layer) != self.height:
             raise ValueError(
-                "The height of the layer does not match the height of the "
-                "LayeredMap"
+                "The height of the layer does not match the height of the " "LayeredMap"
             )
         for i, row in enumerate(layer):
             if len(row) != self.width:
@@ -92,7 +89,7 @@ class LayeredMap:
                 )
         self._layers[name] = layer
 
-    def remove_layer(self, name : str) -> None:
+    def remove_layer(self, name: str) -> None:
         """Removes a layer from the map.
 
         :param name: The name of the layer.
@@ -116,9 +113,10 @@ class LayeredMap:
     def __iter__(self):
         return (self[i] for i in range(self.height))
 
-def dirname(path : str) -> str:
+
+def dirname(path: str) -> str:
     """Extracts the directory component from a path.
-    
+
     :param path: The path
     :returns: The directory component of the path.
     """
@@ -130,7 +128,8 @@ def dirname(path : str) -> str:
         return directory
     return directory.rstrip(os.sep)
 
-def hsv_to_rgb(hue : float, saturation : float, value : float) -> tuple:
+
+def hsv_to_rgb(hue: float, saturation: float, value: float) -> tuple:
     """Convert a color from the HSV to the RGB model.
 
     :param hue: The hue of the color between 0 and 1.
@@ -157,7 +156,8 @@ def hsv_to_rgb(hue : float, saturation : float, value : float) -> tuple:
         return (supplement + base, base, chroma + base)
     return (chroma + base, base, supplement + base)
 
-def pack_rgb(red : float, green : float, blue : float) -> int:
+
+def pack_rgb(red: float, green: float, blue: float) -> int:
     """Pack an RGB color into a 3-byte integer.
 
     Examples::
@@ -172,7 +172,8 @@ def pack_rgb(red : float, green : float, blue : float) -> int:
     """
     return (int(0xFF * red) << 16) + (int(0xFF * green) << 8) + int(0xFF * blue)
 
-def hsv_to_packed_rgb(hue : float, saturation : float, value : float) -> int:
+
+def hsv_to_packed_rgb(hue: float, saturation: float, value: float) -> int:
     """Convert a color from the HSV model to a packed 3-byte RGB integer.
 
     :param hue: The hue of the color between 0 and 1.

@@ -22,6 +22,7 @@ them with objects.
 
 from adafruit_hid import consumer_control_code, keycode
 
+
 class _Code:
     """Simple dataclass for wrapping consumer control or key codes.
     Can be use to check with `ininstance(code, ...)` if a code should be send as
@@ -29,7 +30,8 @@ class _Code:
 
     :param code: the code wrapped by this object.
     """
-    def __init__(self, code : int):
+
+    def __init__(self, code: int):
         self._code = code
         self.release = False
 
@@ -49,13 +51,16 @@ class _Code:
 
         return negated
 
-class ConsumerControl(_Code): # pylint: disable=too-few-public-methods
+
+class ConsumerControl(_Code):  # pylint: disable=too-few-public-methods
     """Check with `isinstance(code, ConsumerControlCode)`"""
 
-class Key(_Code): # pylint: disable=too-few-public-methods
+
+class Key(_Code):  # pylint: disable=too-few-public-methods
     """Check with `isinstance(code, KeyCode)`"""
 
-class _CodeWrapper: # pylint: disable=too-few-public-methods
+
+class _CodeWrapper:  # pylint: disable=too-few-public-methods
     """A simple wrapper around a class with consumer control or key code
     constants.
 
@@ -64,21 +69,20 @@ class _CodeWrapper: # pylint: disable=too-few-public-methods
                           or the class `adafruit_hid.keycode.Keycode`.
     :param code_class: Either the class `ConsumerControl` or the class `Key`.
     """
-    def __init__(self, code_provider, code_class : type[_Code]):
+
+    def __init__(self, code_provider, code_class: type[_Code]):
         self._provider = code_provider
         self._cache = {}
         self._code_class = code_class
 
-    def __getattr__(self, name : str) -> ConsumerControl | Key:
+    def __getattr__(self, name: str) -> ConsumerControl | Key:
         if name in self._cache:
             return self._cache[name]
         code = getattr(self._provider, name, None)
         if code is None:
             if isinstance(self._provider, type):
                 classname = self._provider.__name__
-                raise AttributeError(
-                    f"Class `{classname}` has no attribute `{name}`."
-                )
+                raise AttributeError(f"Class `{classname}` has no attribute `{name}`.")
             classname = type(self._provider).__name__
             raise AttributeError(
                 f"Object of class `{classname}` has no attribute `{name}`."
@@ -87,6 +91,7 @@ class _CodeWrapper: # pylint: disable=too-few-public-methods
         self._cache[name] = code
 
         return code
+
 
 ConsumerControlCode = _CodeWrapper(
     consumer_control_code.ConsumerControlCode,

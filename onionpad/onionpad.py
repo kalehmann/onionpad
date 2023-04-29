@@ -25,6 +25,7 @@ from .hid import Key, ConsumerControl
 from .layout import TitleLayout
 from .util import LayeredMap
 
+
 class Mode:
     """A layer for the OnionPad that can define key events, show content on the
     display or send events to the host.
@@ -32,10 +33,10 @@ class Mode:
     :param onionPad: The OnionPad instance.
     """
 
-    NAME="Mode"
+    NAME = "Mode"
     """The name of the mode that will be used in the mode selection."""
 
-    def __init__(self, onionpad : 'OnionPad'):
+    def __init__(self, onionpad: "OnionPad"):
         self.onionpad = onionpad
 
     @property
@@ -53,10 +54,7 @@ class Mode:
 
                   See `OnionPad._exec_event_handler` for possible handlers.
         """
-        return [
-            [None, None, None, None]
-            for _ in range(3)
-        ]
+        return [[None, None, None, None] for _ in range(3)]
 
     @property
     def keypad_icons(self) -> list:
@@ -64,10 +62,7 @@ class Mode:
         :returns: A 2-dimensional 4x3 list with icons for handlers registered
                   by this mode.
         """
-        return [
-            [None, None, None, None]
-            for _ in range(3)
-        ]
+        return [[None, None, None, None] for _ in range(3)]
 
     @property
     def keyup_events(self) -> list:
@@ -78,10 +73,7 @@ class Mode:
                   See `onion_pad.OnionPad._execEventHandler` for possible
                   handlers.
         """
-        return [
-            [None, None, None, None]
-            for _ in range(3)
-        ]
+        return [[None, None, None, None] for _ in range(3)]
 
     @property
     def encoder_events(self) -> list:
@@ -110,12 +102,14 @@ class Mode:
         the LEDs.
         """
 
+
 class ModeStack:
     """The stack of all active modes.
 
     :param layout: The title layout of the OnionPad.
     """
-    def __init__(self, layout : TitleLayout):
+
+    def __init__(self, layout: TitleLayout):
         self._active_modes = []
         self._encoder_handlers = LayeredMap(1, 1)
         self._keydown_handlers = LayeredMap(4, 3)
@@ -159,7 +153,7 @@ class ModeStack:
         """
         return self._keypad_icons.immutable
 
-    def pop(self, mode : Mode | None = None) -> None:
+    def pop(self, mode: Mode | None = None) -> None:
         """
         Removes a mode from a stack.
 
@@ -196,7 +190,7 @@ class ModeStack:
         else:
             self._layout.title = None
 
-    def push(self, mode : Mode) -> None:
+    def push(self, mode: Mode) -> None:
         """
         Adds a mode to the modestack.
 
@@ -219,7 +213,7 @@ class ModeStack:
         self._keyup_handlers.push_layer(mode.keyup_events, mode.NAME)
         self._keypad_icons.push_layer(mode.keypad_icons, mode.NAME)
 
-    def set_mode(self, mode : Mode | None) -> None:
+    def set_mode(self, mode: Mode | None) -> None:
         """
         Set the mode of the OnionPad.
 
@@ -231,6 +225,7 @@ class ModeStack:
         while self._active_modes:
             self.pop()
         self.push(mode)
+
 
 class OnionPad:
     """The OnionPad is a CircuitPython firmware for the Adafruit Macropad.
@@ -272,7 +267,7 @@ class OnionPad:
         """
         return tuple(self._registered_modes)
 
-    def pop_mode(self, mode : Mode | None = None) -> None:
+    def pop_mode(self, mode: Mode | None = None) -> None:
         """
         Removes a mode from a stack.
 
@@ -285,7 +280,7 @@ class OnionPad:
         self._modestack.pop(mode)
         self.schedule_display_refresh()
 
-    def push_mode(self, mode_class : type[Mode]) -> None:
+    def push_mode(self, mode_class: type[Mode]) -> None:
         """
         Adds a mode to the modestack.
 
@@ -302,7 +297,7 @@ class OnionPad:
         self._modestack.push(mode)
         self.schedule_display_refresh()
 
-    def register_mode(self, mode_class : type[Mode]) -> None:
+    def register_mode(self, mode_class: type[Mode]) -> None:
         """
         Register a mode, so that it shows up in the mode selection.
 
@@ -310,7 +305,7 @@ class OnionPad:
         """
         self._registered_modes.add(mode_class)
 
-    def set_mode(self, mode_class : type[Mode] | None) -> None:
+    def set_mode(self, mode_class: type[Mode] | None) -> None:
         """
         Set the mode of the OnionPad.
 
@@ -346,7 +341,7 @@ class OnionPad:
         if encoder_change:
             self._exec_event_handler(
                 self._modestack.encoder_handlers[0][0],
-                args={"encoder" : encoder, "change" : encoder_change},
+                args={"encoder": encoder, "change": encoder_change},
             )
         # Copy the list of modes to avoid problems with changes to the mode list
         # during iteration.
@@ -359,7 +354,7 @@ class OnionPad:
             self.macropad.pixels.show()
             self._should_refresh_pixels = False
 
-    def _handle_key_event(self, event : keypad.Event) -> None:
+    def _handle_key_event(self, event: keypad.Event) -> None:
         """Runs the first handler on the modestack that matches a keypad event.
 
         :param event: The keypad event.
@@ -375,8 +370,8 @@ class OnionPad:
     def _exec_event_handler(
         self,
         handler,
-        args : dict | None = None,
-        release : bool = True,
+        args: dict | None = None,
+        release: bool = True,
     ) -> None:
         """Executes an event handler.
 

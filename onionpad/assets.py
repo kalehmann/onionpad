@@ -22,7 +22,8 @@ import os
 
 from .util import dirname
 
-class _FileFinder: # pylint: disable=too-few-public-methods
+
+class _FileFinder:  # pylint: disable=too-few-public-methods
     """Obtain the file path of assets from the attributes of this class.
 
     :param basepath: The path prepended to an attribute name. This is usually a
@@ -41,9 +42,9 @@ class _FileFinder: # pylint: disable=too-few-public-methods
 
     def __init__(
         self,
-        basepath : str,
-        postfix : str,
-        subfinders : dict | None = None,
+        basepath: str,
+        postfix: str,
+        subfinders: dict | None = None,
     ):
         if not basepath.endswith(os.sep):
             basepath += os.sep
@@ -53,7 +54,7 @@ class _FileFinder: # pylint: disable=too-few-public-methods
             subfinders = {}
         self._subfinders = subfinders
 
-    def __getattr__(self, name : str) -> str | '_FileFinder':
+    def __getattr__(self, name: str) -> str | "_FileFinder":
         if name in self._subfinders:
             return self._subfinders[name]
         path = self._basepath + name + self._postfix
@@ -66,14 +67,15 @@ class _FileFinder: # pylint: disable=too-few-public-methods
 
         return path
 
+
 _icons_directory = dirname(__file__) + os.sep + "icons/"
 Icons = _FileFinder(
     _icons_directory,
     ".bmp",
     {
-        "generic" : _FileFinder(
+        "generic": _FileFinder(
             _icons_directory + "generic/",
             "-14.bmp",
         ),
-    }
+    },
 )

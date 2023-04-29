@@ -27,6 +27,7 @@ from displayio import Group, OnDiskBitmap, TileGrid
 from terminalio import FONT as builtinFont
 from .assets import Icons
 
+
 class HotkeyMap(Group):
     """A layout used to display icons for hotkeys on a 4x3 grid.
 
@@ -35,7 +36,7 @@ class HotkeyMap(Group):
 
     def __init__(
         self,
-        position : tuple,
+        position: tuple,
     ):
         super().__init__(x=position[0], y=position[1])
         bitmap = OnDiskBitmap(Icons.keypad)
@@ -48,12 +49,9 @@ class HotkeyMap(Group):
         self.append(self._background)
         for _ in range(16):
             self.append(Group(x=0, y=0))
-        self._images = [
-            [None for _ in range(4)]
-            for _ in range(3)
-        ]
+        self._images = [[None for _ in range(4)] for _ in range(3)]
 
-    def set_contents(self, images : list) -> bool:
+    def set_contents(self, images: list) -> bool:
         """Update the icons for the hotkeys.
 
         :param images: A 2-dimensional 4x3 iterable with the images for the
@@ -71,13 +69,13 @@ class HotkeyMap(Group):
 
     def set_icon(
         self,
-        left : int,
-        top : int,
-        icon : OnDiskBitmap | None,
+        left: int,
+        top: int,
+        icon: OnDiskBitmap | None,
     ) -> bool:
         """Update the icon at the specified position.
 
-        :param left: The horizontal offset of the icon from the top left corner.                     
+        :param left: The horizontal offset of the icon from the top left corner.
         :param top: The vertical offset of the icon from the top left corner.
         :param icon: The new icon or `None` to clear the current icon.
         :returns: Whether the new icon differs from the current icon.
@@ -89,14 +87,12 @@ class HotkeyMap(Group):
             self[index] = Group(x=0, y=0)
         else:
             self[index] = TileGrid(
-                icon,
-                pixel_shader=icon.pixel_shader,
-                x=1 + 16 * left,
-                y=1 + 16 * top
+                icon, pixel_shader=icon.pixel_shader, x=1 + 16 * left, y=1 + 16 * top
             )
             self._images[top][left] = icon
 
         return True
+
 
 class LoadingCircle(Group):
     """A loading animation with a circular arc in the center of the display."""
@@ -135,7 +131,7 @@ class LoadingCircle(Group):
         for i in range(self._TILES):
             self[i + 1].hidden = True
 
-    def set_progress(self, progress : float) -> None:
+    def set_progress(self, progress: float) -> None:
         """Set the current progress of the animation.
 
         :param progress: The current progress between 0 and 1.
@@ -153,7 +149,7 @@ class LoadingCircle(Group):
             else:
                 self[i + 1].hidden = True
 
-    def _add_tile(self, index : int) -> None:
+    def _add_tile(self, index: int) -> None:
         """Add a new TileGrid.
 
         :param index: The index of the new tile between 0 and _TILES.
@@ -171,7 +167,7 @@ class LoadingCircle(Group):
         )
         self._rotate_tile(index)
 
-    def _rotate_tile(self, index : int) -> None:
+    def _rotate_tile(self, index: int) -> None:
         """Rotates the TileGrid with the given index into the correct position
         for the animation.
 
@@ -195,6 +191,7 @@ class LoadingCircle(Group):
             self[index].flip_y = False
             self[index].transpose_xy = True
 
+
 class SelectionLayout(Group):
     """A simple selector to pick a single item out of several elements.
 
@@ -209,10 +206,10 @@ class SelectionLayout(Group):
 
     def __init__(
         self,
-        position : tuple,
-        entries : list,
-        width : int,
-        max_labels : int = 7,
+        position: tuple,
+        entries: list,
+        width: int,
+        max_labels: int = 7,
     ):
         super().__init__(x=position[0], y=position[1])
         self._entries = entries
@@ -258,7 +255,7 @@ class SelectionLayout(Group):
 
         return self.active
 
-    def _init_labels(self, width : int) -> None:
+    def _init_labels(self, width: int) -> None:
         height = int(width * 1.4)
         label_height = 12
         self.append(
@@ -287,16 +284,18 @@ class SelectionLayout(Group):
         entry_count = len(self._entries)
         offset = (self._display_labels - min(entry_count, self._max_labels)) // 2
         for i in range(entry_count):
-            color=0xFFFFFF
+            color = 0xFFFFFF
             if i == self._display_labels // 2:
-                color=0x000000
-            self._label_group.append(Label(
-                anchor_point=(0, 0.5),
-                anchored_position=(2, (offset + i) * (height // self._max_labels)),
-                color=color,
-                font=builtinFont,
-                text="",
-            ))
+                color = 0x000000
+            self._label_group.append(
+                Label(
+                    anchor_point=(0, 0.5),
+                    anchored_position=(2, (offset + i) * (height // self._max_labels)),
+                    color=color,
+                    font=builtinFont,
+                    text="",
+                )
+            )
 
     def _redraw(self) -> None:
         if not self._entries:
@@ -312,6 +311,7 @@ class SelectionLayout(Group):
         for i, element in enumerate(elements):
             self._label_group[i].text = element
 
+
 class TitleLayout(Group):
     """Shows a short title  black on white at the top of the display.
 
@@ -321,7 +321,7 @@ class TitleLayout(Group):
     NO_MODE = "No Mode"
     """Default title if no mode is active"""
 
-    def __init__(self, width = int):
+    def __init__(self, width=int):
         super().__init__(x=0, y=0)
         self.append(
             Rect(
@@ -357,7 +357,7 @@ class TitleLayout(Group):
         return self._title.text
 
     @title.setter
-    def title(self, value : str | None) -> None:
+    def title(self, value: str | None) -> None:
         """Update the title.
 
         :param value: The new title or `None` for the placeholder.

@@ -28,18 +28,21 @@ from .hid import ConsumerControlCode
 from .layout import HotkeyMap, LoadingCircle, SelectionLayout
 from .util import hsv_to_packed_rgb
 
+
 class AmbientMode(Mode):
     """Changes the colors of the NeoPixels continually."""
-    NAME="Ambience"
 
-    def __init__(self, onionpad : OnionPad):
+    NAME = "Ambience"
+
+    def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
         self.keys = [
             [
-                random.random(), # Hue in [0, 1]
-                0.2 * random.random() + 0.8, # Saturation in [0.8, 1]
+                random.random(),  # Hue in [0, 1]
+                0.2 * random.random() + 0.8,  # Saturation in [0.8, 1]
                 random.choice((-1, 1)) * 0.2 * random.random() + 0.2,
-            ] for _ in range(12)
+            ]
+            for _ in range(12)
         ]
         self._last_run = 0
 
@@ -60,16 +63,17 @@ class AmbientMode(Mode):
             self.onionpad.macropad.pixels[i] = hsv_to_packed_rgb(
                 self.keys[i][0],
                 self.keys[i][1],
-                .2,
+                0.2,
             )
         self.onionpad.schedule_pixel_refresh()
+
 
 class BaseMode(Mode):
     """A simple mode that can trigger the mode selection."""
 
-    NAME="Base Mode"
+    NAME = "Base Mode"
 
-    def __init__(self, onionpad : OnionPad):
+    def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
         self._layer_icon = OnDiskBitmap(Icons.generic.layers)
         self._layer_icon.pixel_shader.make_transparent(0)
@@ -97,12 +101,13 @@ class BaseMode(Mode):
     def _on_layer_select(self):
         self.onionpad.push_mode(PreSelectionMode)
 
+
 class HotkeyMapMode(Mode):
     """Displays the icons for the hotkey actions."""
 
-    NAME="Hotkeys"
+    NAME = "Hotkeys"
 
-    def __init__(self, onionpad : OnionPad):
+    def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
         self._layer = HotkeyMap((0, 40))
 
@@ -114,18 +119,19 @@ class HotkeyMapMode(Mode):
         if self._layer.set_contents(self.onionpad.keypad_icons):
             self.onionpad.schedule_display_refresh()
 
+
 class MediaMode(Mode):
     """Add hotkeys for media actions."""
 
-    NAME="Media"
+    NAME = "Media"
 
-    def __init__(self, onionpad : OnionPad):
+    def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
         self._icons = {
-            'next' : OnDiskBitmap(Icons.generic.next),
-            'play' : OnDiskBitmap(Icons.generic.play_pause),
-            'previous' : OnDiskBitmap(Icons.generic.previous),
-            'stop' : OnDiskBitmap(Icons.generic.stop),
+            "next": OnDiskBitmap(Icons.generic.next),
+            "play": OnDiskBitmap(Icons.generic.play_pause),
+            "previous": OnDiskBitmap(Icons.generic.previous),
+            "stop": OnDiskBitmap(Icons.generic.stop),
         }
         for bitmap in self._icons.values():
             bitmap.pixel_shader.make_transparent(0)
@@ -140,7 +146,7 @@ class MediaMode(Mode):
                 ConsumerControlCode.STOP,
                 ConsumerControlCode.SCAN_NEXT_TRACK,
             ],
-            [None, None, None, None]
+            [None, None, None, None],
         ]
 
     @property
@@ -148,13 +154,14 @@ class MediaMode(Mode):
         return [
             [None, None, None, None],
             [
-                self._icons['previous'],
-                self._icons['play'],
-                self._icons['stop'],
-                self._icons['next']
+                self._icons["previous"],
+                self._icons["play"],
+                self._icons["stop"],
+                self._icons["next"],
             ],
             [None, None, None, None],
         ]
+
 
 class PreSelectionMode(Mode):
     """Shows a short animation before the selection of modes.
@@ -166,7 +173,7 @@ class PreSelectionMode(Mode):
     DURATION = 1
     NAME = "Preselection"
 
-    def __init__(self, onionpad : OnionPad):
+    def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
         self._start = 0
         self._layer = LoadingCircle()
@@ -200,17 +207,16 @@ class PreSelectionMode(Mode):
     def _abort(self) -> None:
         self.onionpad.set_mode(BaseMode)
 
+
 class SelectionMode(Mode):
     """Lists selectable modes and changes to the selected mode."""
 
-    NAME="Selection"
+    NAME = "Selection"
 
-    def __init__(self, onionpad : OnionPad):
+    def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
         display_width = onionpad.macropad.display.width
-        self._modes = {
-            mode.NAME : mode for mode in onionpad.registered_modes
-        }
+        self._modes = {mode.NAME: mode for mode in onionpad.registered_modes}
         self._layer = SelectionLayout(
             (0, 20),
             width=display_width,
@@ -228,9 +234,9 @@ class SelectionMode(Mode):
     @property
     def keydown_events(self) -> list:
         return [
-            [lambda : None, None, None, None],
+            [lambda: None, None, None, None],
             [None, None, None, None],
-            [None, None, None, None]
+            [None, None, None, None],
         ]
 
     @property
@@ -238,7 +244,7 @@ class SelectionMode(Mode):
         return [
             [self._select, None, None, None],
             [None, None, None, None],
-            [None, None, None, None]
+            [None, None, None, None],
         ]
 
     @property
@@ -246,7 +252,7 @@ class SelectionMode(Mode):
         return "Modes:"
 
     # pylint: disable-next=unused-argument
-    def _encoder(self, encoder : int, change : int) -> None:
+    def _encoder(self, encoder: int, change: int) -> None:
         if change > 0:
             self._layer.next()
         else:
