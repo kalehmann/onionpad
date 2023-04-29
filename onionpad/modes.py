@@ -18,6 +18,7 @@
 
 """Basic modes for the Onionpad."""
 
+
 import random
 import time
 
@@ -44,7 +45,7 @@ class AmbientMode(Mode):
             ]
             for _ in range(12)
         ]
-        self._last_run = 0
+        self._last_run = 0.0
 
     def start(self) -> None:
         self._last_run = time.monotonic()
@@ -91,7 +92,7 @@ class BaseMode(Mode):
         ]
 
     @property
-    def keypad_icons(self) -> None:
+    def keypad_icons(self) -> list:
         return [
             [self._layer_icon, None, None, None],
             [None, None, None, None],
@@ -150,7 +151,7 @@ class MediaMode(Mode):
         ]
 
     @property
-    def keypad_icons(self) -> None:
+    def keypad_icons(self) -> list:
         return [
             [None, None, None, None],
             [
@@ -179,7 +180,7 @@ class PreSelectionMode(Mode):
         self._layer = LoadingCircle()
 
     @property
-    def group(self) -> Group | None:
+    def group(self) -> Group:
         return self._layer
 
     @property

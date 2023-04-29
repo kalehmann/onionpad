@@ -18,6 +18,11 @@
 
 """Helper classes and function for the OnionPad"""
 
+try:
+    from typing import Dict
+except ImportError as _:
+    pass
+
 from collections import OrderedDict
 import os
 
@@ -47,7 +52,7 @@ class LayeredMap:
     def __init__(self, width: int, height: int):
         self._height = height
         self._width = width
-        self._layers = OrderedDict()
+        self._layers: Dict[str, list] = OrderedDict()
 
     @property
     def width(self) -> int:
@@ -79,7 +84,7 @@ class LayeredMap:
         """
         if len(layer) != self.height:
             raise ValueError(
-                "The height of the layer does not match the height of the " "LayeredMap"
+                "The height of the layer does not match the height of the LayeredMap"
             )
         for i, row in enumerate(layer):
             if len(row) != self.width:

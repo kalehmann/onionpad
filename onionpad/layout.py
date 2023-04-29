@@ -18,6 +18,12 @@
 
 """Components for the OLED display of the macropad."""
 
+try:
+    from typing import List, Tuple
+    from collections.abc import Iterable
+except ImportError as _:
+    pass
+
 import math
 
 from adafruit_display_shapes.circle import Circle
@@ -36,7 +42,7 @@ class HotkeyMap(Group):
 
     def __init__(
         self,
-        position: tuple,
+        position: Tuple[int, int],
     ):
         super().__init__(x=position[0], y=position[1])
         bitmap = OnDiskBitmap(Icons.keypad)
@@ -51,7 +57,7 @@ class HotkeyMap(Group):
             self.append(Group(x=0, y=0))
         self._images = [[None for _ in range(4)] for _ in range(3)]
 
-    def set_contents(self, images: list) -> bool:
+    def set_contents(self, images: Iterable[Iterable[OnDiskBitmap]]) -> bool:
         """Update the icons for the hotkeys.
 
         :param images: A 2-dimensional 4x3 iterable with the images for the
@@ -206,14 +212,14 @@ class SelectionLayout(Group):
 
     def __init__(
         self,
-        position: tuple,
-        entries: list,
+        position: Tuple[int, int],
+        entries: List[str],
         width: int,
         max_labels: int = 7,
     ):
         super().__init__(x=position[0], y=position[1])
         self._entries = entries
-        self._index = 0 if entries else None
+        self._index = 0
         self._label_group = Group(x=0, y=0)
         self._max_labels = max_labels
         # Number of elements actually shown
@@ -227,7 +233,7 @@ class SelectionLayout(Group):
 
         :returns: The selected item or `None` if there are no items.
         """
-        if self._index is None:
+        if not self._entries:
             return None
         return self._entries[self._index]
 
@@ -236,7 +242,7 @@ class SelectionLayout(Group):
 
         :returns: The item selected after the operation.
         """
-        if self.active is None:
+        if not self._entries:
             return None
         self._index = (self._index + 1) % len(self._entries)
         self._redraw()
@@ -248,7 +254,7 @@ class SelectionLayout(Group):
 
         :returns: The item selected after the operation.
         """
-        if self.active is None:
+        if not self._entries:
             return None
         self._index = (self._index - 1) % len(self._entries)
         self._redraw()

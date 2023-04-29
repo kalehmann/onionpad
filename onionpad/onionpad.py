@@ -18,6 +18,11 @@
 
 """Base classes for the Onionpad implementation."""
 
+try:
+    from typing import List
+except ImportError as _:
+    pass
+
 from adafruit_macropad import MacroPad
 from displayio import Group
 import keypad
@@ -110,7 +115,7 @@ class ModeStack:
     """
 
     def __init__(self, layout: TitleLayout):
-        self._active_modes = []
+        self._active_modes: List[Mode] = []
         self._encoder_handlers = LayeredMap(1, 1)
         self._keydown_handlers = LayeredMap(4, 3)
         self._keyup_handlers = LayeredMap(4, 3)
@@ -213,7 +218,7 @@ class ModeStack:
         self._keyup_handlers.push_layer(mode.keyup_events, mode.NAME)
         self._keypad_icons.push_layer(mode.keypad_icons, mode.NAME)
 
-    def set_mode(self, mode: Mode | None) -> None:
+    def set_mode(self, mode: Mode) -> None:
         """
         Set the mode of the OnionPad.
 
@@ -305,7 +310,7 @@ class OnionPad:
         """
         self._registered_modes.add(mode_class)
 
-    def set_mode(self, mode_class: type[Mode] | None) -> None:
+    def set_mode(self, mode_class: type[Mode]) -> None:
         """
         Set the mode of the OnionPad.
 

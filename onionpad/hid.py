@@ -20,6 +20,11 @@
 them with objects.
 """
 
+try:
+    from typing import Dict
+except ImportError as _:
+    pass
+
 from adafruit_hid import consumer_control_code, keycode
 
 
@@ -72,7 +77,7 @@ class _CodeWrapper:  # pylint: disable=too-few-public-methods
 
     def __init__(self, code_provider, code_class: type[_Code]):
         self._provider = code_provider
-        self._cache = {}
+        self._cache: Dict[str, ConsumerControl | Key] = {}
         self._code_class = code_class
 
     def __getattr__(self, name: str) -> ConsumerControl | Key:
