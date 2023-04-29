@@ -1,0 +1,62 @@
+---
+kind: "pipeline"
+type: "docker"
+name: "code analysis"
+
+steps:
+        - name: 'Black style test'
+          image: 'registry.kalehmann.de/onionpad:latest'
+          commands:
+                  - 'black --check onionpad'
+        - name: "PyLint"
+          image: 'registry.kalehmann.de/onionpad:latest'
+          commands:
+                  - 'pylint onionpad'
+
+image_pull_secrets:
+        - "dockerconfigjson"
+
+---
+kind: 'pipeline'
+name: 'publish'
+type: 'docker'
+depends_on:
+        - "code analysis"
+
+steps:
+    - name: 'Build the documentation'
+      image: 'registry.kalehmann.de/onionpad:latest'
+      commands:
+          - 'make dirhtml'
+      when:
+          branch:
+              - 'main'
+    - name: 'Deploy the documenation'
+      image: 'registry.kalehmann.de/lftp:latest'
+      commands:
+          - 'lftp -e "
+               set ftp:ssl-force true;
+               set ssl:verify-certificate yes;
+               open -u $${USER},$${PASSWORD} $${SERVER};
+               mirror
+                   --reverse
+                   --delete
+                   $(pwd)/docs/_build/dirhtml
+                   onionpad;
+               exit;"'
+      environment:
+          USER:
+              from_secret: 'ftp_user'
+          PASSWORD:
+              from_secret: 'ftp_password'
+          SERVER:
+              from_secret: 'ftp_server'
+      depends_on:
+          - 'Build the documentation'
+      when:
+          branch:
+              - 'main'
+
+image_pull_secrets:
+    - 'dockerconfigjson'
+...
