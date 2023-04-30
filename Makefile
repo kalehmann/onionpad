@@ -15,7 +15,6 @@ FIRMWARE_FILES = \
     $(USER_FILES)
 
 all: $(FIRMWARE_FILES)
-    $(info $$USER_FILES is [${USER_FILES}])
 
 $(FIRMWARE_DIRECTORY)/user_%: user_%
 	cp -r $< $@
