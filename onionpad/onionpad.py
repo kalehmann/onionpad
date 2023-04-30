@@ -19,7 +19,7 @@
 """Base classes for the Onionpad implementation."""
 
 try:
-    from typing import List
+    from typing import Dict, List, Type
 except ImportError as _:
     pass
 
@@ -38,6 +38,7 @@ class Mode:
     :param onionPad: The OnionPad instance.
     """
 
+    _HIDDEN = False
     NAME = "Mode"
     """The name of the mode that will be used in the mode selection."""
 
@@ -50,6 +51,13 @@ class Mode:
         :returns: A :class:`displayio.Group` that will be shown on the display.
         """
         return None
+
+    @classmethod
+    def is_hidden(cls) -> bool:
+        """
+        :returns: Whether this mode should be hidden from the user.
+        """
+        return cls._HIDDEN
 
     @property
     def keydown_events(self) -> list:
@@ -106,6 +114,55 @@ class Mode:
         """Called periodically. Can be used to update the display or change
         the LEDs.
         """
+
+
+class ModeContainer:
+    """Container for modes.
+
+    Keeps track of all registered modes and avoids instanciating them twice.
+    """
+
+    def __init__(self):
+        self._modes: Dict[Type[Mode], Mode] = {}
+
+    @property
+    def modes(self) -> tuple:
+        """
+        :returns: A tuple with the classes of all modes in the container.
+        """
+        return tuple(self._modes.keys())
+
+    def add(self, mode: Mode) -> None:
+        """Add a mode to the container.
+
+        :param mode: The mode that should be added to the container.
+                     If another instance of the same mode is already stored in
+                     the container, nothing will happen.
+        """
+        mode_class = type(mode)
+        if mode_class in self:
+            return
+        self._modes[mode_class] = mode
+
+    def __contains__(self, mode_class: type[Mode]) -> bool:
+        """Check if the container has an instance of a specific mode class.
+
+        :param mode_class: The class whose existence in the container is checked.
+        :returns: Whether the container has an instance of that class.
+        """
+        return mode_class in self._modes
+
+    def __getitem__(self, mode_class: type[Mode]) -> Mode:
+        """Get an instance for a mode class.
+
+        :param mode_class: The class for which an instance should be returned.
+        :returns: The instance of the class.
+        """
+        if mode_class not in self:
+            raise KeyError(
+                f"The modecontainer has no instance of {mode_class.__class__}"
+            )
+        return self._modes[mode_class]
 
 
 class ModeStack:
@@ -244,9 +301,8 @@ class OnionPad:
     def __init__(self):
         self._encoder_position = 0
         self._macropad = None
-        self._modes = {}
+        self._mode_container = ModeContainer()
         self._modestack = None
-        self._registered_modes = set()
         self._should_refresh_display = False
         self._should_refresh_pixels = False
         self._setup_macropad()
@@ -266,11 +322,11 @@ class OnionPad:
         return self._macropad
 
     @property
-    def registered_modes(self) -> tuple:
+    def modes(self) -> tuple:
         """
         :returns: All registered modes.
         """
-        return tuple(self._registered_modes)
+        return tuple(self._mode_container.modes)
 
     def pop_mode(self, mode: Mode | None = None) -> None:
         """
@@ -296,9 +352,9 @@ class OnionPad:
         :param mode_class: is the class of the mode that should be placed on top
                            of the modestack.
         """
-        if mode_class not in self._modes:
-            self._modes[mode_class] = mode_class(self)
-        mode = self._modes[mode_class]
+        if mode_class not in self._mode_container:
+            self._mode_container.add(mode_class(self))
+        mode = self._mode_container[mode_class]
         self._modestack.push(mode)
         self.schedule_display_refresh()
 
@@ -308,7 +364,8 @@ class OnionPad:
 
         :param mode_class: The class of the mode that should be registered.
         """
-        self._registered_modes.add(mode_class)
+        if mode_class not in self._mode_container:
+            self._mode_container.add(mode_class(self))
 
     def set_mode(self, mode_class: type[Mode]) -> None:
         """
@@ -319,9 +376,9 @@ class OnionPad:
 
         :param mode_class: The new mode of the OnionPad
         """
-        if mode_class not in self._modes:
-            self._modes[mode_class] = mode_class(self)
-        mode = self._modes[mode_class]
+        if mode_class not in self._mode_container:
+            self._mode_container.add(mode_class(self))
+        mode = self._mode_container[mode_class]
         self._modestack.set_mode(mode)
 
     def schedule_display_refresh(self) -> None:

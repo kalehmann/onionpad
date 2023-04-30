@@ -172,11 +172,12 @@ class PreSelectionMode(Mode):
     """
 
     DURATION = 1
+    _HIDDEN = True
     NAME = "Preselection"
 
     def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
-        self._start = 0
+        self._start = 0.0
         self._layer = LoadingCircle()
 
     @property
@@ -212,12 +213,15 @@ class PreSelectionMode(Mode):
 class SelectionMode(Mode):
     """Lists selectable modes and changes to the selected mode."""
 
+    _HIDDEN = True
     NAME = "Selection"
 
     def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
         display_width = onionpad.macropad.display.width
-        self._modes = {mode.NAME: mode for mode in onionpad.registered_modes}
+        self._modes = {
+            mode.NAME: mode for mode in onionpad.modes if not mode.is_hidden()
+        }
         self._layer = SelectionLayout(
             (0, 20),
             width=display_width,
