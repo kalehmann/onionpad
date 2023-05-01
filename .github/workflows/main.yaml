@@ -11,7 +11,7 @@ jobs:
                           uses: "./.github/actions/black"
                           with:
                                   path: "onionpad"
-                        - name: "PyLin"
+                        - name: "PyLint"
                           uses: "./.github/actions/pylint"
                           with:
                                   path: "onionpad"
