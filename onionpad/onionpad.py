@@ -23,6 +23,8 @@ try:
 except ImportError as _:
     pass
 
+import time
+
 from adafruit_macropad import MacroPad
 from displayio import Group
 import keypad
@@ -289,6 +291,69 @@ class ModeStack:
         self.push(mode)
 
 
+class OLEDSaver:
+    """Automatically put the OLED display to sleep after inactivity.
+
+    :param onionpad: The onionpad instance.
+    """
+
+    def __init__(self, macropad: MacroPad):
+        self._delay = 30.0
+        self._last_input = time.monotonic()
+        self._macropad = macropad
+        self._sleep = False
+
+    @property
+    def delay(self) -> float:
+        """
+        :returns: The period of inactivity until the display is put asleep.
+        """
+        return self._delay
+
+    @delay.setter
+    def delay(self, value: float) -> None:
+        """Set the period of inactivity until the display is put asleep.
+
+        :param value: The period of inactivity until the display is put asleep.
+        """
+        self._delay = value
+        self.tick(False)
+
+    @property
+    def is_asleep(self) -> bool:
+        """
+        :returns: Whether the display is currently off.
+        """
+        return self._sleep
+
+    def sleep(self) -> None:
+        """Put the display to sleep."""
+        if self.is_asleep:
+            return
+        self._macropad.display.bus.send(0xAE, b"")
+        self._sleep = True
+
+    def tick(self, user_input: bool) -> None:
+        """
+
+        :param user_input: Whether there was any user input after the last call
+                           to this method.
+        """
+        now = time.monotonic()
+        if user_input:
+            self._last_input = now
+            self.wakeup()
+        elif now - self._last_input > self._delay and not self.is_asleep:
+            self.sleep()
+
+    def wakeup(self) -> None:
+        """Wakes the display up."""
+        if not self.is_asleep:
+            return
+        self._macropad.display.bus.send(0xAF, b"")
+        self._sleep = False
+
+
 class OnionPad:
     """The OnionPad is a CircuitPython firmware for the Adafruit Macropad.
 
@@ -300,9 +365,10 @@ class OnionPad:
 
     def __init__(self):
         self._encoder_position = 0
-        self._macropad = None
+        self._macropad: MacroPad = None
         self._mode_container = ModeContainer()
-        self._modestack = None
+        self._modestack: ModeStack = None
+        self._oled_saver: OLEDSaver = None
         self._should_refresh_display = False
         self._should_refresh_pixels = False
         self._setup_macropad()
@@ -395,12 +461,15 @@ class OnionPad:
             self._tick()
 
     def _tick(self) -> None:
+        user_input = False
         while self.macropad.keys.events:
+            user_input = True
             self._handle_key_event(self.macropad.keys.events.get())
         encoder = self.macropad.encoder
         encoder_change = encoder - self._encoder_position
         self._encoder_position = encoder
         if encoder_change:
+            user_input = True
             self._exec_event_handler(
                 self._modestack.encoder_handlers[0][0],
                 args={"encoder": encoder, "change": encoder_change},
@@ -415,6 +484,7 @@ class OnionPad:
         if self._should_refresh_pixels:
             self.macropad.pixels.show()
             self._should_refresh_pixels = False
+        self._oled_saver.tick(user_input)
 
     def _handle_key_event(self, event: keypad.Event) -> None:
         """Runs the first handler on the modestack that matches a keypad event.
@@ -481,3 +551,4 @@ class OnionPad:
 
         self._macropad = macropad
         self._modestack = ModeStack(layout)
+        self._oled_saver = OLEDSaver(macropad)
