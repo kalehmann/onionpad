@@ -223,9 +223,8 @@ class SelectionMode(Mode):
             mode.NAME: mode for mode in onionpad.modes if not mode.is_hidden()
         }
         self._layer = SelectionLayout(
-            (0, 20),
-            width=display_width,
             entries=list(self._modes.keys()),
+            width=display_width,
         )
 
     @property

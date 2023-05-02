@@ -204,6 +204,8 @@ class SelectionLayout(Group):
     """A simple selector to pick a single item out of several elements.
 
     :param positon: Horizontal and vertical position within the parent.
+                    The default value aligns well with the
+                    :class:`onionpad.layout.TitleLayout`.
     :param entries: The entries that are available for selection.
     :param width: The available with for the SelectionLayout.
     :param index: The index of the default item. Can be `None` to make the
@@ -214,9 +216,9 @@ class SelectionLayout(Group):
 
     def __init__(
         self,
-        position: Tuple[int, int],
         entries: List[str],
         width: int,
+        position: Tuple[int, int] = (0, 12),
         max_labels: int = 7,
     ):
         super().__init__(x=position[0], y=position[1])
@@ -276,9 +278,11 @@ class SelectionLayout(Group):
             )
         )
 
-        marker_index = self._display_labels // 2
+        # One label would yield a negative value here, therefore the index is
+        # limited to positive numbers.
+        marker_index = max(self._display_labels // 2 - 1, 0)
         label_offset = height // self._max_labels
-        vertical_marker_offset = marker_index * label_offset - label_height // 2
+        vertical_marker_offset = marker_index * label_offset
         self.append(
             Rect(
                 x=0,
@@ -293,11 +297,11 @@ class SelectionLayout(Group):
         offset = (self._display_labels - min(entry_count, self._max_labels)) // 2
         for i in range(entry_count):
             color = 0xFFFFFF
-            if i == self._display_labels // 2:
+            if i == marker_index:
                 color = 0x000000
             self._label_group.append(
                 Label(
-                    anchor_point=(0, 0.5),
+                    anchor_point=(0, 0),
                     anchored_position=(2, (offset + i) * (height // self._max_labels)),
                     color=color,
                     font=builtinFont,
@@ -309,11 +313,13 @@ class SelectionLayout(Group):
         if not self._entries:
             return
         entry_count = len(self._entries)
+        elements_before_index = math.floor(self._display_labels / 2) - 1
+        elements_after_index = math.ceil(self._display_labels / 2) + 1
         elements = [
             self._entries[i % entry_count]
             for i in range(
-                self._index - self._display_labels // 2,
-                self._index + self._display_labels - self._display_labels // 2,
+                self._index - elements_before_index,
+                self._index + elements_after_index,
             )
         ]
         for i, element in enumerate(elements):
