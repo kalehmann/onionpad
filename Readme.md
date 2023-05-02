@@ -30,7 +30,7 @@ class MyHotkeyMode(Mode):
         return self.NAME
 
     @property
-    def keydown_events(self) -> list:
+    def keydown_actions(self) -> list:
         return [
             [None, None, None, None],
             [None, None, None, None],

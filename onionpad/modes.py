@@ -84,7 +84,7 @@ class BaseMode(Mode):
         return self.NAME
 
     @property
-    def keydown_events(self) -> list:
+    def keydown_actions(self) -> list:
         return [
             [self._on_layer_select, None, None, None],
             [None, None, None, None],
@@ -138,7 +138,7 @@ class MediaMode(Mode):
             bitmap.pixel_shader.make_transparent(0)
 
     @property
-    def keydown_events(self) -> list:
+    def keydown_actions(self) -> list:
         return [
             [None, None, None, None],
             [
@@ -185,7 +185,7 @@ class PreSelectionMode(Mode):
         return self._layer
 
     @property
-    def keyup_events(self) -> list:
+    def keyup_actions(self) -> list:
         return [
             [self._abort, None, None, None],
             [None, None, None, None],
@@ -233,11 +233,11 @@ class SelectionMode(Mode):
         return self._layer
 
     @property
-    def encoder_events(self) -> list:
+    def encoder_actions(self) -> list:
         return [[self._encoder]]
 
     @property
-    def keydown_events(self) -> list:
+    def keydown_actions(self) -> list:
         return [
             [lambda: None, None, None, None],
             [None, None, None, None],
@@ -245,7 +245,7 @@ class SelectionMode(Mode):
         ]
 
     @property
-    def keyup_events(self) -> list:
+    def keyup_actions(self) -> list:
         return [
             [self._select, None, None, None],
             [None, None, None, None],

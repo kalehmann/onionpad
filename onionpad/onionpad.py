@@ -82,20 +82,20 @@ class ActionRunner:
     ) -> None:
         """Executes an action.
 
-        :param handler: Is the handler the should be executed.
-                        If handler is callable it will be simply called.
-                        A string will be entered on the keyboard.
-                        Instances of :class:`onionpad.hid.ConsumerControl`,
-                        :class:`onionpad.hid.Key`,
-                        :class:`onionpad.hid.MouseClick` or
-                        :class:`onionpad.hid.MouseMove` will be send to the
-                        host.
-                        In case the handler is an iterable, each element will
-                        be executed as handler.
+        :param action: Is the action the should be executed.
+                       If action is callable it will be simply called.
+                       A string will be entered on the keyboard.
+                       Instances of :class:`onionpad.hid.ConsumerControl`,
+                       :class:`onionpad.hid.Key`,
+                       :class:`onionpad.hid.MouseClick` or
+                       :class:`onionpad.hid.MouseMove` will be send to the
+                       host.
+                       In case the action is an iterable, each element will
+                       be executed as action.
         :param args: Additional keyword arguments that will be passed to the
-                     handler.
+                     action.
         :param release: Whether to tell the host, that all keys and consumer
-                        control functions are released again after the handler
+                        control functions are released again after the action
                         was executed.
         """
         if args is None:
@@ -146,38 +146,37 @@ class Mode:
         return cls._HIDDEN
 
     @property
-    def keydown_events(self) -> list:
+    def keydown_actions(self) -> list:
         """
-        :returns: A 2-dimensional 4x3 list with handlers that will be executed
+        :returns: A 2-dimensional 4x3 list with actions that will be executed
                   when a key on the OnionPad is pressed.
 
-                  See :meth:`ActionRunner.execute` for possible handlers.
+                  See :meth:`ActionRunner.execute` for possible actions.
         """
         return [[None, None, None, None] for _ in range(3)]
 
     @property
     def keypad_icons(self) -> list:
         """
-        :returns: A 2-dimensional 4x3 list with icons for handlers registered
+        :returns: A 2-dimensional 4x3 list with icons for actions registered
                   by this mode.
         """
         return [[None, None, None, None] for _ in range(3)]
 
     @property
-    def keyup_events(self) -> list:
+    def keyup_actions(self) -> list:
         """
-        :returns: A 2-dimensional 4x3 list with handlers that will be executed
+        :returns: A 2-dimensional 4x3 list with actions that will be executed
                   when a key on the OnionPad is released.
 
-                  See `onion_pad.OnionPad._execEventHandler` for possible
-                  handlers.
+                  See :meth:`ActionRunner.execute` for possible actions.
         """
         return [[None, None, None, None] for _ in range(3)]
 
     @property
-    def encoder_events(self) -> list:
+    def encoder_actions(self) -> list:
         """
-        :returns: A 2-dimensional 1x1 list with handlers that will be executed
+        :returns: A 2-dimensional 1x1 list with actions that will be executed
                   when the rotatory encoder changes its state.
         """
         return [[None]]
@@ -259,9 +258,9 @@ class ModeStack:
 
     def __init__(self, layout: TitleLayout):
         self._active_modes: List[Mode] = []
-        self._encoder_handlers = LayeredMap(1, 1)
-        self._keydown_handlers = LayeredMap(4, 3)
-        self._keyup_handlers = LayeredMap(4, 3)
+        self._encoder_actions = LayeredMap(1, 1)
+        self._keydown_actions = LayeredMap(4, 3)
+        self._keyup_actions = LayeredMap(4, 3)
         self._keypad_icons = LayeredMap(4, 3)
         self._layout = layout
 
@@ -274,25 +273,25 @@ class ModeStack:
         return tuple(reversed(self._active_modes))
 
     @property
-    def encoder_handlers(self) -> tuple:
+    def encoder_actions(self) -> tuple:
         """
-        :returns: A 2-dimensional 1x1 tuple with handler for the rotary encoder.
+        :returns: A 2-dimensional 1x1 tuple with actions for the rotary encoder.
         """
-        return self._encoder_handlers.immutable
+        return self._encoder_actions.immutable
 
     @property
-    def keydown_handlers(self) -> tuple:
+    def keydown_actions(self) -> tuple:
         """
-        :returns: A 2-dimensional 4x3 tuple with the keydown event handlers.
+        :returns: A 2-dimensional 4x3 tuple with the keydown actions.
         """
-        return self._keydown_handlers.immutable
+        return self._keydown_actions.immutable
 
     @property
-    def keyup_handlers(self) -> tuple:
+    def keyup_actions(self) -> tuple:
         """
-        :returns: A 2-dimensional 4x3 tuple with the keyup event handlers.
+        :returns: A 2-dimensional 4x3 tuple with the keyup actions.
         """
-        return self._keyup_handlers.immutable
+        return self._keyup_actions.immutable
 
     @property
     def keypad_icons(self) -> tuple:
@@ -323,14 +322,14 @@ class ModeStack:
         mode.pause()
         if mode.group is not None:
             self._layout.remove(mode.group)
-        if mode.encoder_events:
-            self._encoder_handlers.remove_layer(mode.NAME)
-        if mode.keydown_events:
-            self._keydown_handlers.remove_layer(mode.NAME)
+        if mode.encoder_actions:
+            self._encoder_actions.remove_layer(mode.NAME)
+        if mode.keydown_actions:
+            self._keydown_actions.remove_layer(mode.NAME)
         if mode.keypad_icons:
             self._keypad_icons.remove_layer(mode.NAME)
-        if mode.keyup_events:
-            self._keyup_handlers.remove_layer(mode.NAME)
+        if mode.keyup_actions:
+            self._keyup_actions.remove_layer(mode.NAME)
         for active_mode in reversed(self._active_modes):
             if active_mode.title:
                 self._layout.title = active_mode.title
@@ -356,9 +355,9 @@ class ModeStack:
             self._layout.title = mode.title
         if mode.group is not None:
             self._layout.append(mode.group)
-        self._encoder_handlers.push_layer(mode.encoder_events, mode.NAME)
-        self._keydown_handlers.push_layer(mode.keydown_events, mode.NAME)
-        self._keyup_handlers.push_layer(mode.keyup_events, mode.NAME)
+        self._encoder_actions.push_layer(mode.encoder_actions, mode.NAME)
+        self._keydown_actions.push_layer(mode.keydown_actions, mode.NAME)
+        self._keyup_actions.push_layer(mode.keyup_actions, mode.NAME)
         self._keypad_icons.push_layer(mode.keypad_icons, mode.NAME)
 
     def set_mode(self, mode: Mode) -> None:
@@ -564,7 +563,7 @@ class OnionPad:
         if encoder_change:
             user_input = True
             self.execute_action(
-                self._modestack.encoder_handlers[0][0],
+                self._modestack.encoder_actions[0][0],
                 args={"encoder": encoder, "change": encoder_change},
             )
         # Copy the list of modes to avoid problems with changes to the mode list
@@ -580,16 +579,16 @@ class OnionPad:
         self._oled_saver.tick(user_input)
 
     def _handle_key_event(self, event: keypad.Event) -> None:
-        """Runs the first handler on the modestack that matches a keypad event.
+        """Runs the first action on the modestack that matches a keypad event.
 
         :param event: The keypad event.
         """
         column = event.key_number % 4
         row = event.key_number // 4
         if event.pressed:
-            action = self._modestack.keydown_handlers[row][column]
+            action = self._modestack.keydown_actions[row][column]
         else:
-            action = self._modestack.keyup_handlers[row][column]
+            action = self._modestack.keyup_actions[row][column]
         self.execute_action(action)
 
     def _setup_macropad(self) -> None:
