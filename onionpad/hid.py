@@ -25,7 +25,7 @@ try:
 except ImportError as _:
     pass
 
-from adafruit_hid import consumer_control_code, keycode
+from adafruit_hid import consumer_control_code, keycode, mouse
 
 
 class _Code:
@@ -65,22 +65,64 @@ class Key(_Code):  # pylint: disable=too-few-public-methods
     """Check with `isinstance(code, KeyCode)`"""
 
 
+class MouseClick(_Code):  # pylint: disable=too-few-public-methods
+    """Check with `isinstance(code, MouseClick)`"""
+
+
+class MouseMove:
+    """Dataclass for mouse movements.
+    tracks differences in the position and wheel movement.
+
+    :param delta_x: The horizontal movement.
+    :param delta_y: The vertical movement.
+    :param delta_wheel: The movement of the mouse wheel.
+    """
+
+    def __init__(self, delta_x: int = 0, delta_y: int = 0, delta_wheel: int = 0):
+        self._delta_x = delta_x
+        self._delta_y = delta_y
+        self._delta_wheel = delta_wheel
+
+    @property
+    def delta_x(self) -> int:
+        """
+        :returns: The movement on the horizontal axis.
+        """
+        return self._delta_x
+
+    @property
+    def delta_y(self) -> int:
+        """
+        :returns: The movement on the vertical axis.
+        """
+        return self._delta_y
+
+    @property
+    def delta_wheel(self) -> int:
+        """
+        :returns: The movement of the mouse wheel.
+        """
+        return self._delta_wheel
+
+
 class _CodeWrapper:  # pylint: disable=too-few-public-methods
     """A simple wrapper around a class with consumer control or key code
     constants.
 
     :param code_provider: Either the class
-                          `adafruit_hid.consumer_control_code.ConsumerControlCode`
-                          or the class `adafruit_hid.keycode.Keycode`.
-    :param code_class: Either the class `ConsumerControl` or the class `Key`.
+                          :class:`adafruit_hid.consumer_control_code.ConsumerControlCode`,
+                          :class:`adafruit_hid.keycode.Keycode` or the class
+                          :class:`adafruit_hid.mouse.Mouse`.
+    :param code_class: One of the classes :class:`ConsumerControl`, :class:`Key`
+                       or :class:`MouseClick`.
     """
 
     def __init__(self, code_provider, code_class: type[_Code]):
         self._provider = code_provider
-        self._cache: Dict[str, ConsumerControl | Key] = {}
+        self._cache: Dict[str, ConsumerControl | Key | MouseClick] = {}
         self._code_class = code_class
 
-    def __getattr__(self, name: str) -> ConsumerControl | Key:
+    def __getattr__(self, name: str) -> ConsumerControl | Key | MouseClick:
         if name in self._cache:
             return self._cache[name]
         code = getattr(self._provider, name, None)
@@ -102,4 +144,8 @@ ConsumerControlCode = _CodeWrapper(
     consumer_control_code.ConsumerControlCode,
     ConsumerControl,
 )
+"""Wrapper around :class:`adafruit_hid.consumer_control_code.ConsumerControlCode`."""
 Keycode = _CodeWrapper(keycode.Keycode, Key)
+"""Wrapper around :class:`adafruit_hid.keycode.Keycode`."""
+Mouse = _CodeWrapper(mouse.Mouse, MouseClick)
+"""Wrapper around :class:`adafruit_hid.mouse.Mouse`."""

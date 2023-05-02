@@ -27,6 +27,10 @@ intersphinx_mapping = {
         'https://docs.python.org/3',
         None,
     ),
+    'AdafruitHIDLibrary': (
+        'https://docs.circuitpython.org/projects/hid/en/latest/',
+        None,
+    ),
     'CircuitPython': (
         'https://docs.circuitpython.org/en/latest/',
         None,

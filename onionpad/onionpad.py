@@ -28,9 +28,93 @@ import time
 from adafruit_macropad import MacroPad
 from displayio import Group
 import keypad
-from .hid import Key, ConsumerControl
+from .hid import _Code, Key, ConsumerControl, MouseClick, MouseMove
 from .layout import TitleLayout
 from .util import LayeredMap
+
+
+class ActionRunner:
+    """Executes actions for the macropad.
+
+    Actions are simple callables or input that is send to the host, for example
+    key presses or mouse movement.
+
+    :param macropad: The macropad instance.
+    """
+
+    def __init__(self, macropad: MacroPad):
+        self._macropad = macropad
+
+    def execute_hid_action(self, action: _Code | MouseMove | str) -> None:
+        """
+        :param action: The action that will be executed.
+                       Either an instance of :class:`onionpad.hid._Code`,
+                       a :class:`onionpad.hid.MouseMove` or a string.
+                       If the action is a string, every character of the string
+                       will be send as key press to the host.
+        """
+        if isinstance(action, ConsumerControl):
+            self._macropad.consumer_control.send(action.code)
+        elif isinstance(action, Key):
+            if action.release:
+                self._macropad.keyboard.release(action.code)
+            else:
+                self._macropad.keyboard.press(action.code)
+        elif isinstance(action, MouseClick):
+            if action.release:
+                self._macropad.mouse.release(action.code)
+            else:
+                self._macropad.mouse.press(action.code)
+        elif isinstance(action, MouseMove):
+            self._macropad.mouse.move(
+                x=action.delta_x,
+                y=action.delta_y,
+                wheel=action.delta_wheel,
+            )
+        elif isinstance(action, str):
+            self._macropad.keyboard_layout.write(action)
+
+    def execute(
+        self,
+        action,
+        args: dict | None = None,
+        release: bool = True,
+    ) -> None:
+        """Executes an action.
+
+        :param handler: Is the handler the should be executed.
+                        If handler is callable it will be simply called.
+                        A string will be entered on the keyboard.
+                        Instances of :class:`onionpad.hid.ConsumerControl`,
+                        :class:`onionpad.hid.Key`,
+                        :class:`onionpad.hid.MouseClick` or
+                        :class:`onionpad.hid.MouseMove` will be send to the
+                        host.
+                        In case the handler is an iterable, each element will
+                        be executed as handler.
+        :param args: Additional keyword arguments that will be passed to the
+                     handler.
+        :param release: Whether to tell the host, that all keys and consumer
+                        control functions are released again after the handler
+                        was executed.
+        """
+        if args is None:
+            args = {}
+        if callable(action):
+            action(**args)
+        elif isinstance(action, (_Code, MouseMove, str)):
+            self.execute_hid_action(action)
+        elif isinstance(action, list):
+            for element in action:
+                self.execute(element, release=False)
+        if release:
+            self.release_all()
+
+    def release_all(self) -> None:
+        """Report all key presses and mouse clicks to the host as released."""
+        self._macropad.consumer_control.release()
+        self._macropad.keyboard.release_all()
+        self._macropad.mouse.release_all()
 
 
 class Mode:
@@ -67,7 +151,7 @@ class Mode:
         :returns: A 2-dimensional 4x3 list with handlers that will be executed
                   when a key on the OnionPad is pressed.
 
-                  See :meth:`OnionPad._exec_event_handler` for possible handlers.
+                  See :meth:`ActionRunner.execute` for possible handlers.
         """
         return [[None, None, None, None] for _ in range(3)]
 
@@ -394,6 +478,15 @@ class OnionPad:
         """
         return tuple(self._mode_container.modes)
 
+    def execute_action(
+        self,
+        action,
+        args: dict | None = None,
+        release: bool = True,
+    ) -> None:
+        """Wrapper around :meth:`ActionRunner.execute`."""
+        ActionRunner(self._macropad).execute(action, args=args, release=release)
+
     def pop_mode(self, mode: Mode | None = None) -> None:
         """
         Removes a mode from a stack.
@@ -470,7 +563,7 @@ class OnionPad:
         self._encoder_position = encoder
         if encoder_change:
             user_input = True
-            self._exec_event_handler(
+            self.execute_action(
                 self._modestack.encoder_handlers[0][0],
                 args={"encoder": encoder, "change": encoder_change},
             )
@@ -494,51 +587,10 @@ class OnionPad:
         column = event.key_number % 4
         row = event.key_number // 4
         if event.pressed:
-            handler = self._modestack.keydown_handlers[row][column]
+            action = self._modestack.keydown_handlers[row][column]
         else:
-            handler = self._modestack.keyup_handlers[row][column]
-        self._exec_event_handler(handler)
-
-    def _exec_event_handler(
-        self,
-        handler,
-        args: dict | None = None,
-        release: bool = True,
-    ) -> None:
-        """Executes an event handler.
-
-        :param handler: Is the handler the should be executed.
-                        If handler is callable it will be simply called.
-                        A string will be entered on the keyboard.
-                        Instances of `onion_pad.hid.ConsumerControl` or
-                        `onion_pad.hid.Key` will be send to the host.
-                        In case the handler is an iterable, each element will
-                        be executed as handler.
-        :param args: Additional keyword arguments that will be passed to the
-                     handler.
-        :param release: Whether to tell the host, that all keys and consumer
-                        control functions are released again after the handler
-                        was executed.
-        """
-        if args is None:
-            args = {}
-        if callable(handler):
-            handler(**args)
-        elif isinstance(handler, str):
-            self.macropad.keyboard_layout.write(handler)
-        elif isinstance(handler, ConsumerControl):
-            self.macropad.consumer_control.send(handler.code)
-        elif isinstance(handler, Key):
-            if handler.release:
-                self.macropad.keyboard.release(handler.code)
-            else:
-                self.macropad.keyboard.press(handler.code)
-        elif isinstance(handler, list):
-            for element in handler:
-                self._exec_event_handler(element, release=False)
-        if release:
-            self.macropad.keyboard.release_all()
-            self.macropad.consumer_control.release()
+            action = self._modestack.keyup_handlers[row][column]
+        self.execute_action(action)
 
     def _setup_macropad(self) -> None:
         macropad = MacroPad(rotation=90)

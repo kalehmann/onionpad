@@ -10,6 +10,7 @@ onionpad.hid
 
 .. automodule:: onionpad.hid
     :members:
+    :private-members: _CodeWrapper
 
 onionpad.layout
 ---------------
