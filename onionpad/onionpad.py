@@ -413,7 +413,7 @@ class OLEDSaver:
         """Put the display to sleep."""
         if self.is_asleep:
             return
-        self._macropad.display.bus.send(0xAE, b"")
+        self._macropad.display_sleep = True
         self._sleep = True
 
     def tick(self, user_input: bool) -> None:
@@ -433,7 +433,7 @@ class OLEDSaver:
         """Wakes the display up."""
         if not self.is_asleep:
             return
-        self._macropad.display.bus.send(0xAF, b"")
+        self._macropad.display_sleep = False
         self._sleep = False
 
 
