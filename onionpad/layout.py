@@ -34,6 +34,45 @@ from terminalio import FONT as builtinFont
 from .assets import Icons
 
 
+class Animation(TileGrid):
+    """
+    :param position:
+    :param source:
+    :param tile_size:
+    """
+
+    def __init__(
+        self,
+        position: Tuple[int, int],
+        source: OnDiskBitmap,
+        tile_size: Tuple[int, int],
+    ):
+        super().__init__(
+            bitmap=source,
+            pixel_shader=source.pixel_shader,
+            x=position[0],
+            y=position[1],
+            width=1,
+            height=1,
+            tile_width=tile_size[0],
+            tile_height=tile_size[1],
+        )
+        columns = source.width // tile_size[0]
+        rows = source.height // tile_size[1]
+        self._frames = columns * rows
+
+    def update(self, progress: float) -> bool:
+        """
+        :param progress:
+        :returns:
+        """
+        new_frame = int(self._frames * progress)
+        changed = self[0] != new_frame
+        self[0] = new_frame
+
+        return changed
+
+
 class HotkeyMap(Group):
     """A layout used to display icons for hotkeys on a 4x3 grid.
 

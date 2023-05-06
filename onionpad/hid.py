@@ -21,9 +21,12 @@ them with objects.
 """
 
 try:
-    from typing import Dict
+    from typing import Dict, Tuple
 except ImportError as _:
     pass
+
+import math
+import random
 
 from adafruit_hid import consumer_control_code, keycode, mouse
 
@@ -149,3 +152,78 @@ Keycode = _CodeWrapper(keycode.Keycode, Key)
 """Wrapper around :class:`adafruit_hid.keycode.Keycode`."""
 Mouse = _CodeWrapper(mouse.Mouse, MouseClick)
 """Wrapper around :class:`adafruit_hid.mouse.Mouse`."""
+
+
+class MouseJiggler:
+    """A simple moise jiggler.
+
+    :param pixels_per_second: Is an approximation for the numbers of points the
+                              per second cursor will move per second.
+                              Note that the host may convert points to pixels
+                              with a factor different from one.
+    """
+
+    def __init__(self, pixels_per_second: int = 100):
+        self._deviation = random.uniform(0, 2 * math.pi)
+        self._deviation_target = random.uniform(0, 2 * math.pi)
+        self._pixels_per_second = pixels_per_second
+        self._position: Tuple[int, int] = (0, 0)
+        self._sleep = 0.0
+        self._target: Tuple[int, int] = self._get_next_target()
+
+    @property
+    def position(self) -> Tuple[int, int]:
+        """
+        :returns: The mouse pointers position relative to its initial position.
+        """
+        return self._position
+
+    def update(self, delta_t: float) -> Tuple[int, int]:
+        """
+        :param delta_t:
+        """
+        if self._sleep > delta_t:
+            self._sleep -= delta_t
+
+            return (0, 0)
+        delta_x = self._target[0] - self._position[0]
+        delta_y = self._target[1] - self._position[1]
+        distance = math.sqrt(abs(delta_x) ** 2 + abs(delta_y) ** 2)
+        pixels = self._pixels_per_second * delta_t
+        if pixels >= distance:
+            self._sleep = random.uniform(15, 30)
+            self._target = self._get_next_target()
+
+            return (delta_x, delta_y)
+        deviation = self._update_deviation(delta_t)
+        delta_x = round(delta_x * pixels / distance + deviation[0])
+        delta_y = round(delta_y * pixels / distance + deviation[1])
+        self._position = (
+            self._position[0] + delta_x,
+            self._position[1] + delta_y,
+        )
+
+        return (delta_x, delta_y)
+
+    def _update_deviation(self, delta_t) -> Tuple[int, int]:
+        """
+        :param delta_t:
+        """
+        deviation_points = self._pixels_per_second * delta_t * 0.5
+        rotation_points = self._pixels_per_second * delta_t * 0.1
+        if abs(self._deviation_target - self._deviation) < rotation_points:
+            self._deviation_target = random.uniform(0, 2 * math.pi)
+        self._deviation += math.copysign(
+            rotation_points, self._deviation_target - self._deviation
+        )
+
+        return (
+            (math.cos(self._deviation) - math.sin(self._deviation)) * deviation_points,
+            (math.sin(self._deviation) + math.cos(self._deviation)) * deviation_points,
+        )
+
+    def _get_next_target(self) -> Tuple[int, int]:
+        return (
+            random.randint(-50, 50),
+            random.randint(-50, 50),
+        )

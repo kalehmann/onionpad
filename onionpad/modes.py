@@ -25,8 +25,8 @@ import time
 from displayio import Group, OnDiskBitmap
 from .onionpad import Mode, OnionPad
 from .assets import Icons
-from .hid import ConsumerControlCode
-from .layout import HotkeyMap, LoadingCircle, SelectionLayout
+from .hid import ConsumerControlCode, MouseJiggler, MouseMove
+from .layout import Animation, HotkeyMap, LoadingCircle, SelectionLayout
 from .util import hsv_to_packed_rgb
 
 
@@ -162,6 +162,78 @@ class MediaMode(Mode):
             ],
             [None, None, None, None],
         ]
+
+
+class MouseJigglerMode(Mode):
+    """Simulates mouse movement to the host."""
+
+    _DURATION = 1.0
+    NAME = "Jiggler"
+
+    def __init__(self, onionpad: OnionPad):
+        super().__init__(onionpad)
+        bitmap_running = OnDiskBitmap(Icons.mouse)
+        bitmap_running.pixel_shader.make_transparent(0)
+        bitmap_sleeping = OnDiskBitmap(Icons.mouse_sleeping)
+        bitmap_sleeping.pixel_shader.make_transparent(0)
+        self._active = False
+        self._last_tick = 0.0
+        self._layer = Group(x=0, y=0)
+        self._layer.append(Animation((40, 17), bitmap_running, (20, 15)))
+        self._layer.append(Animation((40, 17), bitmap_sleeping, (20, 15)))
+        self._layer[0].hidden = True
+        self._mouse_icon = OnDiskBitmap(Icons.generic.mouse)
+        self._mouse_icon.pixel_shader.make_transparent(0)
+        self._mouse_jiggler = MouseJiggler()
+        self._start = 0.0
+
+    @property
+    def group(self) -> Group:
+        return self._layer
+
+    @property
+    def keydown_actions(self) -> list:
+        return [
+            [None, None, None, self._toggle_jiggle],
+            [None, None, None, None],
+            [None, None, None, None],
+        ]
+
+    @property
+    def keypad_icons(self) -> list:
+        return [
+            [None, None, None, self._mouse_icon],
+            [None, None, None, None],
+            [None, None, None, None],
+        ]
+
+    def _toggle_jiggle(self):
+        if self._active:
+            # Enter inactive mode
+            self._layer[0].hidden = True
+            self._layer[1].hidden = False
+        else:
+            # Enter active mode
+            self._layer[0].hidden = False
+            self._layer[1].hidden = True
+        self._active = not self._active
+
+    def start(self):
+        self._last_tick = time.monotonic()
+        self._start = self._last_tick
+
+    def tick(self) -> None:
+        now = time.monotonic()
+        progress = (now - self._start) / self._DURATION
+        if self._active:
+            animation = self.group[0]
+            delta_x, delta_y = self._mouse_jiggler.update(now - self._last_tick)
+            self.onionpad.execute_action(MouseMove(delta_x, delta_y))
+        else:
+            animation = self.group[1]
+        if animation.update(progress % 1):
+            self.onionpad.schedule_display_refresh()
+        self._last_tick = now
 
 
 class PreSelectionMode(Mode):
