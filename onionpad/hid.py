@@ -157,6 +157,10 @@ Mouse = _CodeWrapper(mouse.Mouse, MouseClick)
 class MouseJiggler:
     """A simple moise jiggler.
 
+    The mouse jiggler selects random points and moves the mouse cursor to them.
+    This movement is not linear, but has some deviation. After the cursor has
+    reached a point, the mouse jiggler sleeps between 15 and 30 seconds.
+
     :param pixels_per_second: Is an approximation for the numbers of points the
                               per second cursor will move per second.
                               Note that the host may convert points to pixels
@@ -179,8 +183,12 @@ class MouseJiggler:
         return self._position
 
     def update(self, delta_t: float) -> Tuple[int, int]:
-        """
-        :param delta_t:
+        """Updates the position of the mouse cursor.
+
+        :param delta_t: The time that elapsed after the previous call to this
+                        method in seconds.
+
+        :returns: The relative change of the position of the mouse cursor.
         """
         if self._sleep > delta_t:
             self._sleep -= delta_t
@@ -206,8 +214,13 @@ class MouseJiggler:
         return (delta_x, delta_y)
 
     def _update_deviation(self, delta_t) -> Tuple[int, int]:
-        """
-        :param delta_t:
+        """Updates the deviation to the mouse movement.
+
+        :param delta_t: The time that elapsed after the previous call to this
+                        method in seconds.
+
+        :returns: The relative change to the mouse position caused by the
+                  deviation.
         """
         deviation_points = self._pixels_per_second * delta_t * 0.5
         rotation_points = self._pixels_per_second * delta_t * 0.1
@@ -223,6 +236,9 @@ class MouseJiggler:
         )
 
     def _get_next_target(self) -> Tuple[int, int]:
+        """
+        :returns: The next random point where the mouse cursor should move to.
+        """
         return (
             random.randint(-50, 50),
             random.randint(-50, 50),

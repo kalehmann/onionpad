@@ -172,18 +172,20 @@ class MouseJigglerMode(Mode):
 
     def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
+        bitmap_mouse = OnDiskBitmap(Icons.generic.mouse)
+        bitmap_mouse.pixel_shader.make_transparent(0)
         bitmap_running = OnDiskBitmap(Icons.mouse)
         bitmap_running.pixel_shader.make_transparent(0)
         bitmap_sleeping = OnDiskBitmap(Icons.mouse_sleeping)
         bitmap_sleeping.pixel_shader.make_transparent(0)
+
         self._active = False
         self._last_tick = 0.0
         self._layer = Group(x=0, y=0)
         self._layer.append(Animation((40, 17), bitmap_running, (20, 15)))
         self._layer.append(Animation((40, 17), bitmap_sleeping, (20, 15)))
         self._layer[0].hidden = True
-        self._mouse_icon = OnDiskBitmap(Icons.generic.mouse)
-        self._mouse_icon.pixel_shader.make_transparent(0)
+        self._mouse_icon = bitmap_mouse
         self._mouse_jiggler = MouseJiggler()
         self._start = 0.0
 
