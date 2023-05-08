@@ -47,7 +47,7 @@ class MyHotkeyMode(Mode):
 
 if __name__ == "__main__":
     app = OnionPad()
-    app.register_mode(modes.BaseMode)
+    app.set_default_mode(modes.BaseMode)
     app.register_mode(modes.HotkeyMapMode)
     app.register_mode(MyHotkeyMode)
     app.push_mode(modes.BaseMode)

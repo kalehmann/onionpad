@@ -258,6 +258,7 @@ class ModeStack:
 
     def __init__(self, layout: TitleLayout):
         self._active_modes: List[Mode] = []
+        self._default_mode: Mode | None = None
         self._encoder_actions = LayeredMap(1, 1)
         self._keydown_actions = LayeredMap(4, 3)
         self._keyup_actions = LayeredMap(4, 3)
@@ -322,20 +323,18 @@ class ModeStack:
         mode.pause()
         if mode.group is not None:
             self._layout.remove(mode.group)
-        if mode.encoder_actions:
-            self._encoder_actions.remove_layer(mode.NAME)
-        if mode.keydown_actions:
-            self._keydown_actions.remove_layer(mode.NAME)
-        if mode.keypad_icons:
-            self._keypad_icons.remove_layer(mode.NAME)
-        if mode.keyup_actions:
-            self._keyup_actions.remove_layer(mode.NAME)
+        self._encoder_actions.remove_layer(mode.NAME)
+        self._keydown_actions.remove_layer(mode.NAME)
+        self._keypad_icons.remove_layer(mode.NAME)
+        self._keyup_actions.remove_layer(mode.NAME)
         for active_mode in reversed(self._active_modes):
             if active_mode.title:
                 self._layout.title = active_mode.title
                 break
         else:
             self._layout.title = None
+        if not self._active_modes and self._default_mode:
+            self.push(self._default_mode)
 
     def push(self, mode: Mode) -> None:
         """
@@ -359,6 +358,15 @@ class ModeStack:
         self._keydown_actions.push_layer(mode.keydown_actions, mode.NAME)
         self._keyup_actions.push_layer(mode.keyup_actions, mode.NAME)
         self._keypad_icons.push_layer(mode.keypad_icons, mode.NAME)
+
+    def set_default_mode(self, mode: Mode | None) -> None:
+        """Set the default mode to apply if all other modes are removed.
+
+        :param mode: The new default mode.
+        """
+        self._default_mode = mode
+        if mode and not self._active_modes:
+            self.push(mode)
 
     def set_mode(self, mode: Mode) -> None:
         """
@@ -524,6 +532,21 @@ class OnionPad:
         """
         if mode_class not in self._mode_container:
             self._mode_container.add(mode_class(self))
+
+    def set_default_mode(self, mode_class: type[Mode] | None) -> None:
+        """Set the mode that will be applied when no other mode is active.
+
+        :param mode_class: The new default mode.
+        """
+        if not mode_class:
+            self._modestack.set_default_mode(None)
+
+            return
+        self.register_mode(mode_class)
+        mode = self._mode_container[mode_class]
+        if not self._modestack.active_modes:
+            self.schedule_display_refresh()
+        self._modestack.set_default_mode(mode)
 
     def set_mode(self, mode_class: type[Mode]) -> None:
         """
