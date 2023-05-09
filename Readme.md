@@ -60,6 +60,14 @@ if __name__ == "__main__":
     app.run()
 ```
 
+### Enabling mass storage
+
+To upload new code to the macropad, mass storage has to be enabled first.
+Hold down the button nearest to the rotary encoder during powerup or when
+pressing the reset button.
+
+Now a drive with the name `CIRCUITPY` should appear on the host.
+
 ### Development
 
 The project includes a [`Makefile`][makefile] to create a bundle that can be
