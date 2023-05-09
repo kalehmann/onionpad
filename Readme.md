@@ -13,6 +13,12 @@ under `icons/terminal-14.bmp` as indexed black and white (1-bit) bitmap.
 Then change `code.py` to
 
 ```python
+# Disable the CircuitPython console before everything else to boot seamlessly
+# into the app.
+# pylint: disable=wrong-import-order, wrong-import-position
+from board import DISPLAY as display
+display.root_group = None
+
 from displayio import OnDiskBitmap
 from onionpad import modes, Mode, OnionPad
 from onionpad.hid import Keycode

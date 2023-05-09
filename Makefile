@@ -11,6 +11,7 @@ USER_FILES = $(patsubst user%, $(FIRMWARE_DIRECTORY)/user%, $(wildcard user_*))
 FIRMWARE_FILES = \
     $(ONIONPAD_LIBRARY) \
     $(ONIONPAD_MPY_FILES) \
+    $(FIRMWARE_DIRECTORY)/boot.py \
     $(FIRMWARE_DIRECTORY)/code.py \
     $(USER_FILES)
 
@@ -26,6 +27,9 @@ $(ONIONPAD_LIBRARY):
 
 $(ONIONPAD_LIBRARY)/%.mpy: onionpad/%.py
 	$(CC) -o $@ $<
+
+$(FIRMWARE_DIRECTORY)/boot.py: boot.py
+	cp $< $@
 
 $(FIRMWARE_DIRECTORY)/code.py: code.py $(wildcard user.py)
 	if [[ -f "user.py" ]]; then \
