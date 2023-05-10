@@ -19,6 +19,7 @@
 """Base classes for the Onionpad implementation."""
 
 try:
+    from collections.abc import Collection
     from typing import Dict, List, Type
 except ImportError as _:
     pass
@@ -146,7 +147,7 @@ class Mode:
         return cls._HIDDEN
 
     @property
-    def keydown_actions(self) -> list:
+    def keydown_actions(self) -> Collection:
         """
         :returns: A 2-dimensional 4x3 list with actions that will be executed
                   when a key on the OnionPad is pressed.
@@ -156,7 +157,7 @@ class Mode:
         return [[None, None, None, None] for _ in range(3)]
 
     @property
-    def keypad_icons(self) -> list:
+    def keypad_icons(self) -> Collection:
         """
         :returns: A 2-dimensional 4x3 list with icons for actions registered
                   by this mode.
@@ -164,7 +165,7 @@ class Mode:
         return [[None, None, None, None] for _ in range(3)]
 
     @property
-    def keyup_actions(self) -> list:
+    def keyup_actions(self) -> Collection:
         """
         :returns: A 2-dimensional 4x3 list with actions that will be executed
                   when a key on the OnionPad is released.
@@ -174,7 +175,7 @@ class Mode:
         return [[None, None, None, None] for _ in range(3)]
 
     @property
-    def encoder_actions(self) -> list:
+    def encoder_actions(self) -> Collection:
         """
         :returns: A 2-dimensional 1x1 list with actions that will be executed
                   when the rotatory encoder changes its state.

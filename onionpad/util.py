@@ -19,11 +19,12 @@
 """Helper classes and function for the OnionPad"""
 
 try:
+    from collections.abc import Collection
     from typing import Dict
 except ImportError as _:
     pass
 
-from collections import OrderedDict
+from collections import OrderedDict  # pylint: disable=ungrouped-imports
 import os
 
 
@@ -75,10 +76,10 @@ class LayeredMap:
         """
         return tuple(tuple(element for element in row) for row in self)
 
-    def push_layer(self, layer: list, name: str) -> None:
+    def push_layer(self, layer: Collection, name: str) -> None:
         """Adds a new layer on top of the map.
 
-        :param layer: A 2-dimensional list with equal dimensions to the
+        :param layer: A 2-dimensional collection with equal dimensions to the
                       LayeredMap.
         :param name: The name of the new layer.
         """
