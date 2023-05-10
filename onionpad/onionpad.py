@@ -312,27 +312,9 @@ class ModeStack:
                      Provide None to remove the mode at the top of the stack.
         """
         if mode:
-            if mode not in self._active_modes:
-                return
-            while self._active_modes[-1] != mode:
-                self.pop()
-            self.pop()
-
-            return
-        mode = self._active_modes.pop()
-        mode.pause()
-        if mode.group is not None:
-            self._layout.remove(mode.group)
-        self._encoder_actions.remove_layer(mode.NAME)
-        self._keydown_actions.remove_layer(mode.NAME)
-        self._keypad_icons.remove_layer(mode.NAME)
-        self._keyup_actions.remove_layer(mode.NAME)
-        for active_mode in reversed(self._active_modes):
-            if active_mode.title:
-                self._layout.title = active_mode.title
-                break
+            self._remove_mode(mode)
         else:
-            self._layout.title = None
+            self._remove_at_top()
         if not self._active_modes and self._default_mode:
             self.push(self._default_mode)
 
@@ -347,7 +329,7 @@ class ModeStack:
         :param mode: The mode that should be placed on top of the modestack.
         """
         if mode in self._active_modes:
-            self.pop(mode)
+            self._remove_mode(mode)
         mode.start()
         self._active_modes.append(mode)
         if mode.title:
@@ -378,8 +360,36 @@ class ModeStack:
         :param mode: The new mode of the OnionPad
         """
         while self._active_modes:
-            self.pop()
+            self._remove_at_top()
         self.push(mode)
+
+    def _remove_at_top(self) -> None:
+        """Removes the most recent mode from the stack."""
+        mode = self._active_modes.pop()
+        mode.pause()
+        if mode.group is not None:
+            self._layout.remove(mode.group)
+        self._encoder_actions.remove_layer(mode.NAME)
+        self._keydown_actions.remove_layer(mode.NAME)
+        self._keypad_icons.remove_layer(mode.NAME)
+        self._keyup_actions.remove_layer(mode.NAME)
+        for active_mode in reversed(self._active_modes):
+            if active_mode.title:
+                self._layout.title = active_mode.title
+                break
+        else:
+            self._layout.title = None
+
+    def _remove_mode(self, mode: Mode) -> None:
+        """Removes the given mode (and all modes above it) from the stack.
+
+        Has no effect if the mode is not present on the stack.
+        """
+        if mode not in self._active_modes:
+            return
+        while self._active_modes[-1] != mode:
+            self._remove_at_top()
+        self._remove_at_top()
 
 
 class OLEDSaver:
