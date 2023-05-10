@@ -350,18 +350,22 @@ class ModeStack:
         if mode and not self._active_modes:
             self.push(mode)
 
-    def set_mode(self, mode: Mode) -> None:
+    def set_mode(self, mode: Mode | None) -> None:
         """
         Set the mode of the OnionPad.
 
         All other modes will be removed from the modestack and the provided mode
         will be the only element on the modestack.
 
-        :param mode: The new mode of the OnionPad
+        :param mode: The new mode of the OnionPad or `None` to change to the
+                     default mode.
         """
         while self._active_modes:
             self._remove_at_top()
-        self.push(mode)
+        if mode:
+            self.push(mode)
+        elif self._default_mode:
+            self.push(self._default_mode)
 
     def _remove_at_top(self) -> None:
         """Removes the most recent mode from the stack."""
@@ -558,15 +562,20 @@ class OnionPad:
             self.schedule_display_refresh()
         self._modestack.set_default_mode(mode)
 
-    def set_mode(self, mode_class: type[Mode]) -> None:
+    def set_mode(self, mode_class: type[Mode] | None) -> None:
         """
         Set the mode of the OnionPad.
 
         All other modes will be removed from the modestack and the provided mode
         will be the only element on the modestack.
 
-        :param mode_class: The new mode of the OnionPad
+        :param mode_class: The new mode of the OnionPad or `None` to change to
+                           the default mode.
         """
+        if mode_class is None:
+            self._modestack.set_mode(None)
+
+            return
         if mode_class not in self._mode_container:
             self._mode_container.add(mode_class(self))
         mode = self._mode_container[mode_class]

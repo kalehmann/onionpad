@@ -281,7 +281,7 @@ class PreSelectionMode(Mode):
         self.onionpad.schedule_display_refresh()
 
     def _abort(self) -> None:
-        self.onionpad.set_mode(BaseMode)
+        self.onionpad.set_mode(None)
 
 
 class SelectionMode(Mode):
