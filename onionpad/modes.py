@@ -20,6 +20,7 @@
 
 try:
     from collections.abc import Collection
+    from typing import Type
 except ImportError as _:
     pass
 
@@ -31,7 +32,7 @@ from .onionpad import Mode, OnionPad
 from .assets import Icons
 from .hid import ConsumerControlCode, MouseJiggler, MouseMove
 from .layout import Animation, HotkeyMap, LoadingCircle, SelectionLayout
-from .util import hsv_to_packed_rgb
+from .util import hsv_to_packed_rgb, LayeredMap
 
 
 class AmbientMode(Mode):
@@ -105,6 +106,79 @@ class BaseMode(Mode):
 
     def _on_layer_select(self):
         self.onionpad.push_mode(PreSelectionMode)
+
+
+class ModeGroup(Mode):
+    """Base class for a mode that groups several other modes.
+
+    Extend this class and fill the :attr:`MODES` class attribute to create a
+    group of modes.
+    There is no need to override any other method or attribute.
+
+    Example ::
+
+        class MyGroup(ModeGroup):
+            MODES = [BaseMode, HotkeyMapMode, MediaMode, MouseJigglerMode]
+    """
+
+    MODES: list[Type[Mode]] = []
+    """The list of modes in this group."""
+
+    NAME = "Group"
+
+    def __init__(self, onionpad: OnionPad):
+        super().__init__(onionpad)
+        self._encoder_actions = LayeredMap(1, 1)
+        self._keydown_actions = LayeredMap(4, 3)
+        self._keypad_icons = LayeredMap(4, 3)
+        self._keyup_actions = LayeredMap(4, 3)
+        self._layer = Group(x=0, y=0)
+        self._modes = []
+        for mode_class in self.MODES:
+            mode = mode_class(onionpad)
+            self._encoder_actions.push_layer(mode.encoder_actions, mode.NAME)
+            self._keydown_actions.push_layer(mode.keydown_actions, mode.NAME)
+            self._keypad_icons.push_layer(mode.keypad_icons, mode.NAME)
+            self._keyup_actions.push_layer(mode.keyup_actions, mode.NAME)
+            self._modes.append(mode)
+            if mode.group:
+                self._layer.append(mode.group)
+
+    @property
+    def group(self) -> Group | None:
+        return self._layer
+
+    @property
+    def keydown_actions(self) -> Collection:
+        return self._keydown_actions.immutable
+
+    @property
+    def keypad_icons(self) -> Collection:
+        return self._keypad_icons.immutable
+
+    @property
+    def keyup_actions(self) -> Collection:
+        return self._keyup_actions.immutable
+
+    @property
+    def encoder_actions(self) -> Collection:
+        return self._encoder_actions.immutable
+
+    @property
+    def title(self) -> str | None:
+        return self.NAME
+
+    def start(self) -> None:
+        for mode in self._modes:
+            mode.start()
+
+    def pause(self) -> None:
+        for mode in self._modes:
+            mode.pause()
+
+    def tick(self) -> None:
+        for mode in self._modes:
+            mode.tick()
 
 
 class HotkeyMapMode(Mode):
