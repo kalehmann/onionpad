@@ -11,7 +11,7 @@ steps:
         - name: "PyLint"
           image: 'registry.kalehmann.de/onionpad:latest'
           commands:
-                  - 'pylint onionpad'
+                  - 'pylint --persistent=n onionpad'
 
 image_pull_secrets:
         - "dockerconfigjson"
