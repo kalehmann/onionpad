@@ -26,51 +26,11 @@ except ImportError as _:
 
 import math
 
-from adafruit_display_shapes.circle import Circle
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_text.label import Label
 from displayio import Group, OnDiskBitmap, TileGrid
 from terminalio import FONT as builtinFont
 from .assets import Icons
-
-
-class Animation(TileGrid):
-    """
-    :param position:
-    :param source:
-    :param tile_size:
-    """
-
-    def __init__(
-        self,
-        position: Tuple[int, int],
-        source: OnDiskBitmap,
-        tile_size: Tuple[int, int],
-    ):
-        super().__init__(
-            bitmap=source,
-            pixel_shader=source.pixel_shader,
-            x=position[0],
-            y=position[1],
-            width=1,
-            height=1,
-            tile_width=tile_size[0],
-            tile_height=tile_size[1],
-        )
-        columns = source.width // tile_size[0]
-        rows = source.height // tile_size[1]
-        self._frames = columns * rows
-
-    def update(self, progress: float) -> bool:
-        """
-        :param progress:
-        :returns:
-        """
-        new_frame = int(self._frames * progress)
-        changed = self[0] != new_frame
-        self[0] = new_frame
-
-        return changed
 
 
 class HotkeyMap(Group):
@@ -139,103 +99,6 @@ class HotkeyMap(Group):
             self._images[top][left] = icon
 
         return True
-
-
-class LoadingCircle(Group):
-    """A loading animation with a circular arc in the center of the display."""
-
-    _POSITIONS = (
-        (32, 40),
-        (32, 64),
-        (8, 64),
-        (8, 40),
-    )
-    """The positions of the TileGrids of the animations on the display."""
-    _STEPS = 16
-    """The number of frames of the animation."""
-    _STEPS_PER_TILE = 4
-    """The number of frames per tile."""
-    _TILES = 4
-    """The number of TileGrids."""
-
-    def __init__(self):
-        super().__init__(x=0, y=0)
-        self._bitmap = Icons.loading_circle()
-        self.append(
-            Circle(
-                fill=0x000000,
-                r=25,
-                x0=32,
-                y0=64,
-            )
-        )
-        for i in range(self._TILES):
-            self._add_tile(i)
-
-    def reset(self) -> None:
-        """Revert the animations to its initial state."""
-        for i in range(self._TILES):
-            self[i + 1].hidden = True
-
-    def set_progress(self, progress: float) -> None:
-        """Set the current progress of the animation.
-
-        :param progress: The current progress between 0 and 1.
-        """
-        progress = math.ceil(self._STEPS * progress)
-        full_tiles = progress // self._STEPS_PER_TILE
-        partial_tile_progress = progress % self._STEPS_PER_TILE
-        for i in range(self._TILES):
-            if i < full_tiles:
-                self[i + 1].hidden = False
-                self[i + 1][0] = self._STEPS_PER_TILE - 1
-            elif i == full_tiles:
-                self[i + 1].hidden = False
-                self[i + 1][0] = partial_tile_progress
-            else:
-                self[i + 1].hidden = True
-
-    def _add_tile(self, index: int) -> None:
-        """Add a new TileGrid.
-
-        :param index: The index of the new tile between 0 and _TILES.
-        """
-        left, top = self._POSITIONS[index]
-        self.append(
-            TileGrid(
-                bitmap=self._bitmap,
-                pixel_shader=self._bitmap.pixel_shader,
-                tile_height=24,
-                tile_width=24,
-                x=left,
-                y=top,
-            )
-        )
-        self._rotate_tile(index)
-
-    def _rotate_tile(self, index: int) -> None:
-        """Rotates the TileGrid with the given index into the correct position
-        for the animation.
-
-        :param index: The index of the TileGrid.
-        """
-        index += 1
-        if index == 1:
-            self[index].flip_x = False
-            self[index].flip_y = False
-            self[index].transpose_xy = False
-        elif index == 2:
-            self[index].flip_x = False
-            self[index].flip_y = True
-            self[index].transpose_xy = True
-        elif index == 3:
-            self[index].flip_x = True
-            self[index].flip_y = True
-            self[index].transpose_xy = False
-        else:
-            self[index].flip_x = True
-            self[index].flip_y = False
-            self[index].transpose_xy = True
 
 
 class SelectionLayout(Group):

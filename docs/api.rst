@@ -1,6 +1,12 @@
 onionpad.assets
 ---------------
 
+.. automodule:: onionpad.animation
+    :members:
+
+onionpad.assets
+---------------
+
 .. automodule:: onionpad.assets
     :members:
     :private-members: _FileFinder

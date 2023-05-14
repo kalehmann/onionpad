@@ -28,9 +28,10 @@ import random
 import time
 
 from displayio import Group
+from .animation import Animation, LoadingCircle, TileAnimation
 from .assets import Icons
 from .hid import ConsumerControlCode, MouseJiggler, MouseMove
-from .layout import Animation, HotkeyMap, LoadingCircle, SelectionLayout
+from .layout import HotkeyMap, SelectionLayout
 from .onionpad import Mode, OnionPad
 from .util import hsv_to_packed_rgb, LayeredMap
 
@@ -254,8 +255,8 @@ class MouseJigglerMode(Mode):
         self._active = False
         self._last_tick = 0.0
         self._layer = Group(x=0, y=0)
-        self._layer.append(Animation((40, 17), bitmap_running, (20, 15)))
-        self._layer.append(Animation((40, 17), bitmap_sleeping, (20, 15)))
+        self._layer.append(TileAnimation((40, 17), bitmap_running, (20, 15)))
+        self._layer.append(TileAnimation((40, 17), bitmap_sleeping, (20, 15)))
         self._layer[0].hidden = True
         self._mouse_icon = bitmap_mouse
         self._mouse_jiggler = MouseJiggler()
@@ -297,14 +298,12 @@ class MouseJigglerMode(Mode):
         self._start = self._last_tick
 
     def tick(self) -> None:
+        animation: Animation = self.group[0] if self._active else self.group[1]
         now = time.monotonic()
         progress = (now - self._start) / self._DURATION
         if self._active:
-            animation = self.group[0]
             delta_x, delta_y = self._mouse_jiggler.update(now - self._last_tick)
             self.onionpad.execute_action(MouseMove(delta_x, delta_y))
-        else:
-            animation = self.group[1]
         if animation.update(progress % 1):
             self.onionpad.schedule_display_refresh()
         self._last_tick = now
@@ -340,7 +339,6 @@ class PreSelectionMode(Mode):
 
     def start(self):
         self._start = time.monotonic()
-        self.group.reset()
 
     def tick(self) -> None:
         progress = (time.monotonic() - self._start) / self.DURATION
@@ -349,7 +347,7 @@ class PreSelectionMode(Mode):
             self.onionpad.push_mode(SelectionMode)
 
             return
-        self.group.set_progress(progress)
+        self.group.update(progress)
         self.onionpad.schedule_display_refresh()
 
     def _abort(self) -> None:
