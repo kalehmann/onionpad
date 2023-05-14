@@ -27,11 +27,11 @@ except ImportError as _:
 import random
 import time
 
-from displayio import Group, OnDiskBitmap
-from .onionpad import Mode, OnionPad
+from displayio import Group
 from .assets import Icons
 from .hid import ConsumerControlCode, MouseJiggler, MouseMove
 from .layout import Animation, HotkeyMap, LoadingCircle, SelectionLayout
+from .onionpad import Mode, OnionPad
 from .util import hsv_to_packed_rgb, LayeredMap
 
 
@@ -81,8 +81,7 @@ class BaseMode(Mode):
 
     def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
-        self._layer_icon = OnDiskBitmap(Icons.generic.layers)
-        self._layer_icon.pixel_shader.make_transparent(0)
+        self._layer_icon = Icons.generic.layers()
 
     @property
     def title(self) -> str | None:
@@ -207,13 +206,11 @@ class MediaMode(Mode):
     def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
         self._icons = {
-            "next": OnDiskBitmap(Icons.generic.next),
-            "play": OnDiskBitmap(Icons.generic.play_pause),
-            "previous": OnDiskBitmap(Icons.generic.previous),
-            "stop": OnDiskBitmap(Icons.generic.stop),
+            "next": Icons.generic.next(),
+            "play": Icons.generic.play_pause(),
+            "previous": Icons.generic.previous(),
+            "stop": Icons.generic.stop(),
         }
-        for bitmap in self._icons.values():
-            bitmap.pixel_shader.make_transparent(0)
 
     @property
     def keydown_actions(self) -> Sequence:
@@ -250,12 +247,9 @@ class MouseJigglerMode(Mode):
 
     def __init__(self, onionpad: OnionPad):
         super().__init__(onionpad)
-        bitmap_mouse = OnDiskBitmap(Icons.generic.mouse)
-        bitmap_mouse.pixel_shader.make_transparent(0)
-        bitmap_running = OnDiskBitmap(Icons.mouse)
-        bitmap_running.pixel_shader.make_transparent(0)
-        bitmap_sleeping = OnDiskBitmap(Icons.mouse_sleeping)
-        bitmap_sleeping.pixel_shader.make_transparent(0)
+        bitmap_mouse = Icons.generic.mouse()
+        bitmap_running = Icons.mouse()
+        bitmap_sleeping = Icons.mouse_sleeping()
 
         self._active = False
         self._last_tick = 0.0

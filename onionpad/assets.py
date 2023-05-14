@@ -18,17 +18,13 @@
 
 """Provides easy access to the path of the icons of the project."""
 
-try:
-    from typing import Union
-except ImportError as _:
-    pass
-
 import os
+from displayio import OnDiskBitmap
 
 from .util import dirname
 
 
-class _FileFinder:  # pylint: disable=too-few-public-methods
+class _FileFinder(str):
     """Obtain the file path of assets from the attributes of this class.
 
     :param basepath: The path prepended to an attribute name. This is usually a
@@ -49,18 +45,25 @@ class _FileFinder:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         basepath: str,
-        postfix: str,
+        postfix: str = "",
         subfinders: dict | None = None,
     ):
-        if not basepath.endswith(os.sep):
-            basepath += os.sep
         self._basepath = basepath
         self._postfix = postfix
         if subfinders is None:
             subfinders = {}
         self._subfinders = subfinders
 
-    def __getattr__(self, name: str) -> Union[str, "_FileFinder"]:
+    def __call__(self) -> OnDiskBitmap:
+        """
+        :returns: A bitmap of the file.
+        """
+        bitmap = OnDiskBitmap(str(self))
+        bitmap.pixel_shader.make_transparent(0)
+
+        return bitmap
+
+    def __getattr__(self, name: str) -> "_FileFinder":
         if name in self._subfinders:
             return self._subfinders[name]
         path = self._basepath + name + self._postfix
@@ -71,16 +74,19 @@ class _FileFinder:  # pylint: disable=too-few-public-methods
                 f"No attribute `{name}`. File '{path}' does not exist"
             ) from exception
 
-        return path
+        return _FileFinder(path)
+
+    def __str__(self):
+        return self._basepath
 
 
-_icons_directory = dirname(__file__) + os.sep + "icons/"
+_icons_directory = dirname(__file__) + os.sep + "icons" + os.sep
 Icons = _FileFinder(
     _icons_directory,
     ".bmp",
     {
         "generic": _FileFinder(
-            _icons_directory + "generic/",
+            _icons_directory + "generic" + os.sep,
             "-14.bmp",
         ),
     },

@@ -84,7 +84,7 @@ class HotkeyMap(Group):
         position: Tuple[int, int],
     ):
         super().__init__(x=position[0], y=position[1])
-        bitmap = OnDiskBitmap(Icons.keypad)
+        bitmap = Icons.keypad()
         self._background = TileGrid(
             bitmap,
             pixel_shader=bitmap.pixel_shader,
@@ -160,8 +160,7 @@ class LoadingCircle(Group):
 
     def __init__(self):
         super().__init__(x=0, y=0)
-        self._bitmap = OnDiskBitmap(Icons.loading_circle)
-        self._bitmap.pixel_shader.make_transparent(0)
+        self._bitmap = Icons.loading_circle()
         self.append(
             Circle(
                 fill=0x000000,
