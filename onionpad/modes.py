@@ -19,7 +19,7 @@
 """Basic modes for the Onionpad."""
 
 try:
-    from collections.abc import Collection
+    from collections.abc import Sequence
     from typing import Type
 except ImportError as _:
     pass
@@ -89,7 +89,7 @@ class BaseMode(Mode):
         return self.NAME
 
     @property
-    def keydown_actions(self) -> Collection:
+    def keydown_actions(self) -> Sequence:
         return [
             [self._on_layer_select, None, None, None],
             [None, None, None, None],
@@ -97,7 +97,7 @@ class BaseMode(Mode):
         ]
 
     @property
-    def keypad_icons(self) -> Collection:
+    def keypad_icons(self) -> Sequence:
         return [
             [self._layer_icon, None, None, None],
             [None, None, None, None],
@@ -149,19 +149,19 @@ class ModeGroup(Mode):
         return self._layer
 
     @property
-    def keydown_actions(self) -> Collection:
+    def keydown_actions(self) -> Sequence:
         return self._keydown_actions.immutable
 
     @property
-    def keypad_icons(self) -> Collection:
+    def keypad_icons(self) -> Sequence:
         return self._keypad_icons.immutable
 
     @property
-    def keyup_actions(self) -> Collection:
+    def keyup_actions(self) -> Sequence:
         return self._keyup_actions.immutable
 
     @property
-    def encoder_actions(self) -> Collection:
+    def encoder_actions(self) -> Sequence:
         return self._encoder_actions.immutable
 
     @property
@@ -216,7 +216,7 @@ class MediaMode(Mode):
             bitmap.pixel_shader.make_transparent(0)
 
     @property
-    def keydown_actions(self) -> Collection:
+    def keydown_actions(self) -> Sequence:
         return [
             [None, None, None, None],
             [
@@ -229,7 +229,7 @@ class MediaMode(Mode):
         ]
 
     @property
-    def keypad_icons(self) -> Collection:
+    def keypad_icons(self) -> Sequence:
         return [
             [None, None, None, None],
             [
@@ -272,7 +272,7 @@ class MouseJigglerMode(Mode):
         return self._layer
 
     @property
-    def keydown_actions(self) -> Collection:
+    def keydown_actions(self) -> Sequence:
         return [
             [None, None, None, self._toggle_jiggle],
             [None, None, None, None],
@@ -280,7 +280,7 @@ class MouseJigglerMode(Mode):
         ]
 
     @property
-    def keypad_icons(self) -> Collection:
+    def keypad_icons(self) -> Sequence:
         return [
             [None, None, None, self._mouse_icon],
             [None, None, None, None],
@@ -337,7 +337,7 @@ class PreSelectionMode(Mode):
         return self._layer
 
     @property
-    def keyup_actions(self) -> Collection:
+    def keyup_actions(self) -> Sequence:
         return [
             [self._abort, None, None, None],
             [None, None, None, None],
@@ -384,11 +384,11 @@ class SelectionMode(Mode):
         return self._layer
 
     @property
-    def encoder_actions(self) -> Collection:
+    def encoder_actions(self) -> Sequence:
         return [[self._encoder]]
 
     @property
-    def keydown_actions(self) -> Collection:
+    def keydown_actions(self) -> Sequence:
         return [
             [lambda: None, None, None, None],
             [None, None, None, None],
@@ -396,7 +396,7 @@ class SelectionMode(Mode):
         ]
 
     @property
-    def keyup_actions(self) -> Collection:
+    def keyup_actions(self) -> Sequence:
         return [
             [self._select, None, None, None],
             [None, None, None, None],

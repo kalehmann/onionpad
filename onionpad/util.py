@@ -19,7 +19,7 @@
 """Helper classes and function for the OnionPad"""
 
 try:
-    from collections.abc import Collection
+    from collections.abc import Sequence
     from typing import Dict
 except ImportError as _:
     pass
@@ -53,7 +53,7 @@ class LayeredMap:
     def __init__(self, width: int, height: int):
         self._height = height
         self._width = width
-        self._layers: Dict[str, list] = OrderedDict()
+        self._layers: Dict[str, Sequence] = OrderedDict()
 
     @property
     def width(self) -> int:
@@ -76,10 +76,10 @@ class LayeredMap:
         """
         return tuple(tuple(element for element in row) for row in self)
 
-    def push_layer(self, layer: Collection, name: str) -> None:
+    def push_layer(self, layer: Sequence, name: str) -> None:
         """Adds a new layer on top of the map.
 
-        :param layer: A 2-dimensional collection with equal dimensions to the
+        :param layer: A 2-dimensional sequence with equal dimensions to the
                       LayeredMap.
         :param name: The name of the new layer.
         """
