@@ -1,49 +1,71 @@
 ---
-kind: "pipeline"
-type: "docker"
-name: "code analysis"
+kind: 'pipeline'
+type: 'docker'
+name: 'code analysis'
+clone:
+    disable: true
 
 steps:
-        - name: 'Black style test'
-          image: 'registry.kalehmann.de/onionpad:latest'
-          commands:
-                  - 'black --check onionpad'
-        - name: "PyLint"
-          image: 'registry.kalehmann.de/onionpad:latest'
-          commands:
-                  - 'pylint --persistent=n onionpad'
+    - name: 'clone'
+      image: 'git.kalehmann.de/infrastructure/dockerimages/git:latest'
+      commands:
+          - 'git clone $DRONE_REMOTE_URL .'
+          - 'git checkout $DRONE_COMMIT'
+          - 'chown -R 1000:1000 .'
+    - name: 'Black style test'
+      image: 'git.kalehmann.de/karsten/macropad:latest'
+      commands:
+          - 'black --check onionpad'
+      depends_on:
+          - 'clone'
+    - name: 'PyLint'
+      image: 'git.kalehmann.de/karsten/macropad:latest'
+      commands:
+          - 'pylint --persistent=n onionpad'
+      depends_on:
+          - 'clone'
 
 image_pull_secrets:
-        - "dockerconfigjson"
+    - 'dockerconfigjson'
 
 ---
 kind: 'pipeline'
 name: 'publish'
 type: 'docker'
+clone:
+    disable: true
 depends_on:
-        - "code analysis"
+    - 'code analysis'
 
 steps:
+    - name: 'clone'
+      image: 'git.kalehmann.de/infrastructure/dockerimages/git:latest'
+      commands:
+          - 'git clone $DRONE_REMOTE_URL .'
+          - 'git checkout $DRONE_COMMIT'
+          - 'chown -R 1000:1000 .'
     - name: 'Build the documentation'
-      image: 'registry.kalehmann.de/onionpad:latest'
+      image: 'git.kalehmann.de/karsten/macropad:latest'
       commands:
           - 'make dirhtml'
+      depends_on:
+          - 'clone'
       when:
           branch:
               - 'main'
     - name: 'Deploy the documenation'
-      image: 'registry.kalehmann.de/lftp:latest'
+      image: 'git.kalehmann.de/infrastructure/dockerimages/lftp:latest'
       commands:
           - 'lftp -e "
-               set ftp:ssl-force true;
-               set ssl:verify-certificate yes;
-               open -u $${USER},$${PASSWORD} $${SERVER};
-               mirror
-                   --reverse
-                   --delete
-                   $(pwd)/docs/_build/dirhtml
-                   onionpad;
-               exit;"'
+                 set ftp:ssl-force true;
+                 set ssl:verify-certificate yes;
+                 open -u $${USER},$${PASSWORD} $${SERVER};
+                 mirror
+                     --reverse
+                     --delete
+                     $(pwd)/docs/_build/dirhtml
+                     onionpad;
+                 exit;"'
       environment:
           USER:
               from_secret: 'ftp_user'
